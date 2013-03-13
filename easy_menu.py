@@ -203,7 +203,7 @@ class EasyMenu(object):
         try:
             self._output.write(unicode_text.encode(self._encoding))
         except LookupError, e:
-            raise EncodeError('Encode error: %s' % e.message)
+            raise EncodeError('Encode error: %s' % e)
 
     def _read_input(self):
         ret = self._input.readline()
