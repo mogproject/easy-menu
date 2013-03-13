@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Easy Menu : The Simplest Terminal User Interface" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Easy Menu</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/mogproject/easy-menu">View on GitHub</a>
+
+          <h1 id="project_title">Easy Menu</h1>
+          <h2 id="project_tagline">The Simplest Terminal User Interface</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/mogproject/easy-menu/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/mogproject/easy-menu/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h4>サーバ運用の標準化にお困りではありませんか?</h4>
+
+<p><strong>Easy Menu</strong> は</p>
+
+<ul>
+<li>定常的なサーバ運用の迅速化</li>
+<li>オペレーション・ミスの防止</li>
+</ul><p>を目的として作られた、テキストベースのメニュー生成ツールです。</p>
+
+<p>シンプルな <a href="http://ja.wikipedia.org/wiki/JavaScript_Object_Notation">JSON</a> 形式の設定ファイルを準備するだけで、
+誰でも操作可能なターミナル・ユーザーインターフェースを提供できます。</p>
+
+<h2>特徴</h2>
+
+<h4>サーバ運用担当者として</h4>
+
+<ul>
+<li>サーバに対する知識をお持ちでない方でも、telnet / SSH ターミナルソフトから本ツールを利用することで<br>
+安全かつ迅速なオペレーションを行うことができます。</li>
+<li>
+<a href="http://www.python.org/">Python</a> 上で動作するため、異なるOSでも共通の操作性を得ることができます。</li>
+</ul><h4>サーバ管理者として</h4>
+
+<ul>
+<li>JSON に対する基礎的な知識があれば、設定ファイルをカスタマイズするだけで簡単にメニューを生成することができます。
+
+<ul>
+<li>ご利用のみであれば、Python の知識は必要ありません。</li>
+</ul>
+</li>
+<li>動作に必要なモジュールは、「Python スクリプト(easy_menu.py)」と「設定ファイル」の2つだけです。</li>
+<li>コマンドの実行結果は専用のログファイルに記録されます。</li>
+<li>Apache 2.0 ライセンスのもと、ご自由に改変・再配布いただけます。</li>
+</ul><h2>動作要件</h2>
+
+<ul>
+<li>OS: Windows / Linux / UNIX / MacOS</li>
+<li>Python 2 系 (2.6 以上)</li>
+</ul><h2>動作イメージ</h2>
+
+<h4>起動画面</h4>
+
+<pre><code>ホスト名: server01                                            実行ユーザ: user01
+================================================================================
+  メインメニュー
+--------------------------------------------------------------------------------
+  1 | サービス稼動状態確認
+  2 | サーバリソース状況確認
+  3 | 業務状態制御メニューへ
+  4 | Webサービス制御メニューへ
+  5 | サーバ再起動
+----+---------------------------------------------------------------------------
+  0 | 終了
+================================================================================
+番号を入力してください (0-5):
+</code></pre>
+
+<ul>
+<li>表示されるメニューに応じて番号を入力します。</li>
+</ul><h4>実行確認</h4>
+
+<pre><code>ホスト名: server01                                            実行ユーザ: user01
+================================================================================
+  実行確認
+--------------------------------------------------------------------------------
+  サービス稼動状態確認 を行います。
+================================================================================
+よろしいですか? (y/n) [n]:
+</code></pre>
+
+<ul>
+<li>実行する処理を選んだあと、「y」と入力すると続行します。</li>
+</ul><h4>コマンド実行画面</h4>
+
+<pre><code>ホスト名: server01                                            実行ユーザ: user01
+================================================================================
+  実行: サービス稼動状態確認
+--------------------------------------------------------------------------------
+Condition all green!
+--------------------------------------------------------------------------------
+Return code: 0
+================================================================================
+Enterキーを入力するとメニューに戻ります...
+
+</code></pre>
+
+<ul>
+<li>設定ファイルに記述した内容のコマンドが実行されます。</li>
+<li>コマンドの標準出力は、そのまま画面に表示されます。</li>
+<li>コマンドの終了コードが「Return code」として表示されます。</li>
+</ul><h4>サブメニュー</h4>
+
+<pre><code>ホスト名: server01                                            実行ユーザ: user01
+================================================================================
+  Webサービス制御メニュー
+--------------------------------------------------------------------------------
+  1 | Webサービス状態確認
+  2 | Webサービス起動
+  3 | Webサービス停止
+----+---------------------------------------------------------------------------
+  0 | メインメニュー に戻る
+================================================================================
+番号を入力してください (0-3):
+</code></pre>
+
+<ul>
+<li>このように、階層構造のメニューを作ることもできます。</li>
+</ul><h2>はじめよう</h2>
+
+<p>それでは、さっそく <strong>Easy Menu</strong> を使ってみましょう!</p>
+
+<ul>
+<li><a href="https://github.com/mogproject/easy-menu/blob/master/MANUAL.md">利用マニュアルへ</a></li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Easy Menu maintained by <a href="https://github.com/mogproject">mogproject</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
