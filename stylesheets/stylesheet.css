@@ -429,3 +429,16 @@ Small Device Styles
   }
 
 }
+
+#toolbar {
+    margin-top: 16pt;
+    margin-bottom: 16pt;
+}
+
+#tweet_button {
+    float: left;
+}
+
+#facebook_button {
+    float: left;
+}
