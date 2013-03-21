@@ -31,11 +31,11 @@ try:
     import json
 except ImportError:
     print('You need python 2.6 or later to run this script.')
-    exit(1)
+    sys.exit(1)
 
 # Version settings.
 PROGRAM_NAME = 'Easy Menu'
-PROGRAM_VERSION = '0.0.1'
+PROGRAM_VERSION = '0.0.2'
 
 # Path settings.
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -195,8 +195,8 @@ class EasyMenu(object):
         if not self._input.isatty():
             return
         subprocess.call(
-            'cls' if os.name == 'nt' else 'clear',
-            shell=True
+            'cls' if os.name == 'nt' else 'clear', shell=True,
+            stdin=self._input, stdout=self._output, stderr=self._output
         )
 
     def _print(self, unicode_text):
@@ -315,9 +315,10 @@ class EasyMenu(object):
             self._clear()
             self._print(self._prompt.make_command_start(description))
             self._logger.info('Command started: %s' % command)
+            self._output.flush()
             ret_code = subprocess.call(
-                command.encode(self._encoding),
-                shell=True
+                command.encode(self._encoding), shell=True,
+                stdin=self._input, stdout=self._output, stderr=self._output
             )
             self._logger.info('Command ended with return code: %d' % ret_code)
             self._print(self._prompt.make_command_end(ret_code))

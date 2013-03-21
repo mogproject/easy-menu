@@ -1,0 +1,15 @@
+{
+  "name": "menu1", "item": [
+    "item1", {
+      "name": "menu2",
+      "item": [
+        "item2", {
+          "name": "menu3",
+          "item": [
+            "item3", ""
+          ]
+        }
+      ]
+    }
+  ]
+}

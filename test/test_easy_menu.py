@@ -8,11 +8,15 @@ import os
 import unittest
 import re
 
-sys.path[0:0] = [os.path.join(os.path.dirname(__file__), '..'), ]
-import easy_menu
+# Version settings.
+PROGRAM_VERSION = '0.0.2'
 
 # Path settings.
 SCRIPT_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.path.join(os.path.dirname(__file__), '..')
+
+sys.path[0:0] = [ROOT_DIR, ]
+import easy_menu
 
 
 # Functions.
@@ -20,7 +24,6 @@ def remove_file(path):
     if os.path.exists(path):
         try:
             os.remove(path)
-            print('Removed: %s' % path)
         except OSError:
             print('Cannot remove: %s' % path)
 
@@ -32,6 +35,10 @@ def read_file(path):
     finally:
         file_object.close()
     return data
+
+
+def customized_exit(code):
+    raise ExitException(code)
 
 
 class CustomizedTestCase(unittest.TestCase):
@@ -48,19 +55,27 @@ class CustomizedTestCase(unittest.TestCase):
             self.fail('%s not raised' % exception_class.__name__)
 
 
+class ExitException(Exception):
+    def __init__(self, code):
+        self.code = code
+
+
 class Output(object):
     """Emulate file output"""
     def __init__(self):
         self._buf = []
 
     def fileno(self):
-        return 0
+        return 1
 
     def write(self, text):
         self._buf.append(text)
 
+    def flush(self):
+        pass
+
     def read(self):
-            return ''.join(self._buf)
+        return ''.join(self._buf)
 
 
 class TestPrompt(unittest.TestCase):
@@ -159,7 +174,50 @@ class TestPrompt(unittest.TestCase):
 
 class TestEasyMenu(CustomizedTestCase):
     """Test EasyMenu class."""
-    def _check_log(self, description, log_path, expected):
+    def _check_operation(
+        self, description, dir_name, encoding, expected_output, expected_log
+    ):
+        base_dir = SCRIPT_DIR + '/' + dir_name
+        config_path = base_dir + '/config.json'
+        input_path = base_dir + '/input.txt'
+        output_path = base_dir + '/output.log'
+        log_path = base_dir + '/easy_menu.log'
+
+        sys.stdout.write('%s: Output ... ' % description)
+
+        # Clear files.
+        remove_file(output_path)
+        remove_file(log_path)
+
+        # Start menu.
+        in_file = open(input_path)
+        out_file = open(output_path, 'w')
+
+        try:
+            em = easy_menu.EasyMenu(
+                config_path, log_path, encoding, in_file, out_file)
+            em.start()
+        except Exception, e:
+            raise e
+        finally:
+            in_file.close()
+            out_file.close()
+
+            # Check output.
+            out_text = read_file(output_path)
+            self.assertEqual(expected_output, out_text)
+            print('OK')
+
+            # Check log.
+            sys.stdout.write('%s: Log ... ' % description)
+            self._check_log(log_path, expected_log)
+            print('OK')
+
+            # Clear files.
+            remove_file(output_path)
+            remove_file(log_path)
+
+    def _check_log(self, log_path, expected):
         datetime_format = '\d{4|-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}'
         log_format = '^\[%s\] %%s$' % datetime_format
         expected.append('')
@@ -177,32 +235,6 @@ class TestEasyMenu(CustomizedTestCase):
                     re.search(log_format % line, log_data[i]),
                     'Unexpected log entry.'
                 )
-        print('%s: Log ... OK' % description)
-
-        # Remove log.
-        remove_file(log_path)
-
-    def test_encode_error(self):
-        log_path = SCRIPT_DIR + '/encode_error/encode_error.log'
-
-        # Clear log.
-        remove_file(log_path)
-
-        self.assertExceptionMessage(
-            easy_menu.EncodeError, 'Encode error: unknown encoding: UNKNOWN',
-            lambda: easy_menu.EasyMenu(
-                log_path=log_path,
-                encoding='UNKNOWN'
-            ).start()
-        )
-        print('EncodeError: Unknown encoding ... OK')
-
-        # Check log.
-        self._check_log('EncodeError', log_path, [
-            'INFO Script started\.',
-            'WARNING Script ended with error: ' +
-            'Encode error: unknown encoding: UNKNOWN'
-        ])
 
     def test_logger_error(self):
         log_path = SCRIPT_DIR + '/i/n/v/a/l/i/d/'
@@ -213,109 +245,121 @@ class TestEasyMenu(CustomizedTestCase):
         )
         print('Logger: Invalid file path ... OK')
 
+    def test_encode_error(self):
+        def f():
+            self._check_operation(
+                'EncodeError', 'encode_error', 'UNKNOWN', '', [
+                    'INFO Script started\.',
+                    'WARNING Script ended with error: ' +
+                    'Encode error: unknown encoding: UNKNOWN'
+                ]
+            )
+
+        self.assertExceptionMessage(
+            easy_menu.EncodeError, 'Encode error: unknown encoding: UNKNOWN', f
+        )
+
     def test_interrupt_error(self):
-        base_dir = SCRIPT_DIR + '/interrupt_error'
-        config_path = base_dir + '/config.json'
-        input_path = base_dir + '/input.txt'
-        log_path = base_dir + '/interrupt.log'
+        # Make expected output.
+        prompt = easy_menu.Prompt()
+        menu = prompt.make_menu([{'name': '', 'item': ['', '']}])
+        expected_output = (menu * 2).encode('utf-8')
 
-        # Clear log.
-        remove_file(log_path)
-
-        # Start menu.
-        in_file = open(input_path)
-        out = Output()
-        em = easy_menu.EasyMenu(config_path, log_path, 'utf-8', in_file, out)
-        em.start()
-        in_file.close()
-
-        # Check log.
-        self._check_log('Interrupt', log_path, [
-            'INFO Script started\.',
-            'WARNING Script was interrupted\.'
-        ])
+        self._check_operation(
+            'InterruptError', 'interrupt_error', 'utf-8',
+            expected_output, [
+                'INFO Script started\.',
+                'WARNING Script was interrupted\.'
+            ]
+        )
 
     def test_skelton(self):
-        base_dir = SCRIPT_DIR + '/skeleton'
-        config_path = base_dir + '/config.json'
-        input_path = base_dir + '/input.txt'
-        log_path = base_dir + '/skeleton.log'
+        # Make expected output.
+        prompt = easy_menu.Prompt()
+        menu = prompt.make_menu([{'name': '', 'item': ['', '']}])
+        confirm = prompt.make_confirm('')
+        command = prompt.make_command_start('') + prompt.make_command_end(0)
+        expected_output = (
+            menu * 10 + (confirm + menu) * 8 + (confirm + command + menu) * 6
+        ).encode('utf-8')
 
-        # Clear log.
-        remove_file(log_path)
-
-        # Start menu.
-        in_file = open(input_path)
-        out = Output()
-        em = easy_menu.EasyMenu(config_path, log_path, 'utf-8', in_file, out)
-        em.start()
-        in_file.close()
-
-        # Check log.
-        self._check_log('Skeleton', log_path, [
+        # Make expected log.
+        expected_log = [
             'INFO Script started\.'
         ] + [
             'INFO Command started: ',
             'INFO Command ended with return code: 0',
         ] * 6 + [
             'INFO Script ended normally.'
-        ])
+        ]
 
-        # Check output.
-        prompt = easy_menu.Prompt()
-        menu = prompt.make_menu([{'name': '', 'item': ['', '']}])
-        confirm = prompt.make_confirm('')
-        command = prompt.make_command_start('') + prompt.make_command_end(0)
-        expected = (
-            menu * 10 + (confirm + menu) * 8 + (confirm + command + menu) * 6
+        self._check_operation(
+            'Skeleton', 'skeleton', 'utf-8', expected_output, expected_log
         )
-        self.assertEqual(expected.encode('utf-8'), out.read())
-        print('Skeleton: Output ... OK')
+
+    def test_nested_menu(self):
+        # Make expected output.
+        prompt = easy_menu.Prompt()
+        menu1 = prompt.make_menu([{'name': 'menu1', 'item': ['item1', {}]}])
+        menu2 = prompt.make_menu([
+            {'name': 'menu1', 'item': ['item1', {}]},
+            {'name': 'menu2', 'item': ['item2', {}]}
+        ])
+        menu3 = prompt.make_menu([
+            {'name': 'menu2', 'item': ['item2', {}]},
+            {'name': 'menu3', 'item': ['item3', '']}
+        ])
+        confirm = prompt.make_confirm('item3')
+        command = (
+            prompt.make_command_start('item3') + prompt.make_command_end(0)
+        )
+        expected_output = (
+            menu1 + menu2 + menu3 + confirm + command + menu3 + menu2 + menu1
+        ).encode('utf-8')
+
+        self._check_operation(
+            'NestedMenu', 'nested_menu', 'utf-8',
+            expected_output, [
+                'INFO Script started\.',
+                'INFO Command started: ',
+                'INFO Command ended with return code: 0',
+                'INFO Script ended normally.'
+            ]
+        )
 
     def test_command_output(self):
-        base_dir = SCRIPT_DIR + '/command_output'
-        config_path = base_dir + '/config.json'
-        input_path = base_dir + '/input.txt'
-        log_path = base_dir + '/command_output.log'
-
-        # Clear log.
-        remove_file(log_path)
-
-        # Start menu.
-        in_file = open(input_path)
-        out = Output()
-        em = easy_menu.EasyMenu(config_path, log_path, 'utf-8', in_file, out)
-        em.start()
-        in_file.close()
-
-        # Check log.
-        self._check_log('CommandOutput', log_path, [
-            'INFO Script started\.',
-            'INFO Command started: echo x',
-            'INFO Command ended with return code: 0',
-            'INFO Command started: exit 2',
-            'INFO Command ended with return code: 2',
-            'INFO Script ended normally.'
-        ])
-
-        # Check output.
+        # Make expected output.
         prompt = easy_menu.Prompt()
         menu = prompt.make_menu([
             {"name": "NAME", "item": ["a", "echo x", "b", "exit 2"]}
         ])
-        expected = u''.join([
+        expected_output = u''.join([
             menu,
             prompt.make_confirm('a'),
             prompt.make_command_start('a'),
+            'x\n',
             prompt.make_command_end(0),
             menu,
             prompt.make_confirm('b'),
             prompt.make_command_start('b'),
             prompt.make_command_end(2),
             menu
-        ])
-        self.assertEqual(expected.encode('utf-8'), out.read())
-        print('CommandOutput: Output ... OK')
+        ]).encode('utf-8')
+
+        # Make expected log.
+        expected_log = [
+            'INFO Script started\.',
+            'INFO Command started: echo x',
+            'INFO Command ended with return code: 0',
+            'INFO Command started: exit 2',
+            'INFO Command ended with return code: 2',
+            'INFO Script ended normally.'
+        ]
+
+        self._check_operation(
+            'CommandOutput', 'command_output', 'utf-8',
+            expected_output, expected_log
+        )
 
     def test_config_error(self):
         """Test configuration file error."""
@@ -374,6 +418,64 @@ class TestEasyMenu(CustomizedTestCase):
                 )
             )
             print('OK')
+
+
+class TestMainFunction(unittest.TestCase):
+    """Test main function."""
+    HELP_MESSAGE = """Usage: easy_menu.py [options]
+
+Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+  -c CONFIG_PATH, --config=CONFIG_PATH
+                        set configuration file path to CONFIG_PATH
+  -l LOG_PATH, --log=LOG_PATH
+                        set log file path to LOG_PATH
+  -e ENCODING, --encode=ENCODING
+                        set output encoding to ENCODING
+"""
+    OPTION_ERROR_MESSAGE = """Usage: easy_menu.py [options]
+
+easy_menu.py: error: no such option: -x
+"""
+
+    def test_command_line_options(self):
+        self.assertFalse(os.path.exists('INVALID_FILE_NAME'))
+
+        expected = {
+            ('--version',): ('Easy Menu %s\n' % PROGRAM_VERSION, 0),
+            ('-h',): (self.HELP_MESSAGE, 0),
+            ('--help',): (self.HELP_MESSAGE, 0),
+            ('-x',): (self.OPTION_ERROR_MESSAGE, 2),
+            ('-c', 'INVALID_FILE_NAME'): (
+                'Failed to open file: INVALID_FILE_NAME\n', 3)
+        }
+
+        orig_exit = sys.exit
+        sys.exit = customized_exit
+        for case in expected:
+            sys.stdout.write(
+                'CommandLineOption: %s ... ' % list(case))
+
+            out = Output()
+            sys.stdout = out
+            sys.stderr = out
+            sys.argv = ['easy_menu.py'] + list(case)
+
+            ret = 0
+            try:
+                ret = easy_menu.main()
+            except ExitException, e:
+                ret = e.code
+
+            self.assertEqual(expected[case][1], ret)
+
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            self.assertEqual(
+                expected[case][0], out.read(), 'Unexpected output message.')
+            print('OK')
+        sys.exit = orig_exit
 
 
 if __name__ == "__main__":
