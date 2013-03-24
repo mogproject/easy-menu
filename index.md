@@ -1,5 +1,6 @@
 ---
 layout: default
+title: The Simplest Terminal User Interface
 ---
 
 #### サーバ運用の標準化にお困りではありませんか?
@@ -103,5 +104,5 @@ layout: default
 ----------
 それでは、さっそく **Easy Menu** を使ってみましょう!
 
-* [利用マニュアルへ](manual.html)
+* [利用マニュアルへ](manuals.html)
 
