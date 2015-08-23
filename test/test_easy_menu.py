@@ -9,7 +9,7 @@ import unittest
 import re
 
 # Version settings.
-PROGRAM_VERSION = '0.0.2'
+PROGRAM_VERSION = '0.0.3'
 
 # Path settings.
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -427,12 +427,11 @@ class TestMainFunction(unittest.TestCase):
 Options:
   --version             show program's version number and exit
   -h, --help            show this help message and exit
-  -c CONFIG_PATH, --config=CONFIG_PATH
-                        set configuration file path to CONFIG_PATH
-  -l LOG_PATH, --log=LOG_PATH
-                        set log file path to LOG_PATH
+  -c PATH, --config=PATH
+                        config file path (default: config.json)
+  -l PATH, --log=PATH   log file path (default: easy_menu.log)
   -e ENCODING, --encode=ENCODING
-                        set output encoding to ENCODING
+                        output text encoding
 """
     OPTION_ERROR_MESSAGE = """Usage: easy_menu.py [options]
 

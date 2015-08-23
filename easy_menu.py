@@ -35,7 +35,7 @@ except ImportError:
 
 # Version settings.
 PROGRAM_NAME = 'Easy Menu'
-PROGRAM_VERSION = '0.0.2'
+PROGRAM_VERSION = '0.0.3'
 
 # Path settings.
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -333,16 +333,15 @@ def main():
     parser = OptionParser(version='%s %s' % (PROGRAM_NAME, PROGRAM_VERSION))
     parser.add_option(
         '-c', '--config', dest='config_path',
-        help='set configuration file path to CONFIG_PATH',
-        metavar='CONFIG_PATH'
+        help='config file path (default: config.json)', metavar='PATH'
     )
     parser.add_option(
         '-l', '--log', dest='log_path',
-        help='set log file path to LOG_PATH', metavar='LOG_PATH'
+        help='log file path (default: easy_menu.log)', metavar='PATH'
     )
     parser.add_option(
         '-e', '--encode', dest='encoding',
-        help='set output encoding to ENCODING', metavar='ENCODING'
+        help='output text encoding', metavar='ENCODING'
     )
 
     options = parser.parse_args()[0]
