@@ -1,0 +1,12 @@
+Main Menu:
+  - Service health check: "echo Condition all green!"
+  - Check hardware resources: "echo Hardware resources OK."
+  - Login to other servers:
+    - Login to Server_A: "echo logging into Server_A"
+    - Login to Server_B: "echo logging into Server_B"
+    - Login to Server_C: "echo logging into Server_C"
+  - Control web service:
+    - Check the status of web service: "echo Check web service status"
+    - Start web service: "echo Start web service"
+    - Stop web service: "echo Stop web service"
+  - Reboot this server: "echo Reboot OS"
