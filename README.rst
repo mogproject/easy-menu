@@ -42,7 +42,23 @@ Dependencies
 Installation
 ------------
 
-(todo)
+* ``pip`` command may need ``sudo``
+
++-------------+---------------------------------------+
+| Operation   | Command                               |
++=============+=======================================+
+| Install     |``pip install easy-menu``              |
++-------------+---------------------------------------+
+| Upgrade     |``pip install --upgrade easy-menu``    |
++-------------+---------------------------------------+
+| Uninstall   |``pip uninstall easy-menu``            |
++-------------+---------------------------------------+
+
+* Check installed version: ``easy-menu --version``
+
+* Then, write your configuration to the file ``easy-menu.yml``.
+
+See an example below.
 
 ---------------------
 Configuration Example
