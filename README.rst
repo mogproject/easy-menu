@@ -56,14 +56,7 @@ Remember these commands are executed after changing the current directory to the
 Lookup Path
 -----------
 
-When you run `easy-menu` command, ...
-
-- `easy-menu.yml` in the current directory.
-- `easy-menu.json` in the current directory.
-- `~/easy-menu.yml`
-- `~/easy-menu.json`
-- `/etc/easy-menu/easy-menu.yml`
-- `/etc/easy-menu/easy-menu.json`
+(todo)
 
 ---------
 Audit Log
