@@ -1,7 +1,7 @@
 Main Menu:
   - Service health check: "echo Condition all green!"
   - Check hardware resources: "echo Hardware resources OK."
-  - Login to other servers:
+  - Login to servers:
     - Login to Server_A: "echo logging into Server_A"
     - Login to Server_B: "echo logging into Server_B"
     - Login to Server_C: "echo logging into Server_C"
