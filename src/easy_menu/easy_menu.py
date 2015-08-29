@@ -3,7 +3,7 @@ from view import Terminal
 from controller import CommandExecutor
 from setting.setting import Setting
 from util import network_util
-from exceptions import SettingError, InterruptError
+from exceptions import EasyMenuError, InterruptError
 
 
 def main():
@@ -18,10 +18,11 @@ def main():
         host = network_util.get_hostname()
         user = network_util.get_username()
 
-        t = Terminal(setting.root_menu, host, user, executor)
+        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding)
         t.loop()
     except InterruptError:
         pass
-    except SettingError as e:
-        # TODO
-        raise e
+    except EasyMenuError, e:
+        print(e)
+        return 2
+    return 0

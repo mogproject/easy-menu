@@ -29,13 +29,13 @@ Do you have any routine tasks such as login to your servers, deploying, troubles
 This small tool would help to speed up your operations and prevent human errors.
 It should be helpful not only for salted engineers but unskilled operators.
 
-(todo) gif animation
+.. image:: https://raw.githubusercontent.com/wiki/mogproject/easy-menu/img/demo.gif
 
 ------------
 Dependencies
 ------------
 
-* Python >= 2.6
+* Python: 2.6, 2.7
 * pyyaml
 
 ------------
