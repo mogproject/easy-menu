@@ -4,6 +4,8 @@ from urllib2 import urlopen
 import arg_parser
 from easy_menu.exceptions import SettingError
 
+DEFAULT_CONFIG_NAME = 'easy-menu.yml'
+
 
 class Setting(object):
     """
@@ -33,7 +35,7 @@ class Setting(object):
     def _search_config():
         d = os.getcwd()
         while True:
-            path = os.path.join(d, 'easy-menu.yml')
+            path = os.path.join(d, DEFAULT_CONFIG_NAME)
             if os.path.exists(path):
                 return path
             nd = os.path.dirname(d)
@@ -44,6 +46,8 @@ class Setting(object):
 
     @staticmethod
     def _load_url_or_file(path):
+        if path.starts
+
         try:
             f = urlopen(path)
         except ValueError:  # invalid URL
@@ -55,6 +59,8 @@ class Setting(object):
             raise SettingError('Not found configuration file.')
 
         menu = self._load_url_or_file(self.config_path)
+
+        # TODO: set work dir when the config is file and not set
 
         # TODO: verify and evaluate includes
         return Setting(self.config_path, self.work_dir, menu)

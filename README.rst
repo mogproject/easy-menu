@@ -35,7 +35,7 @@ It should be helpful not only for salted engineers but unskilled operators.
 Dependencies
 ------------
 
-* Python >= 2.6
+* Python: 2.6, 2.7
 * pyyaml
 
 ------------
