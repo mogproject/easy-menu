@@ -2,7 +2,7 @@
 Easy Menu
 =========
 
-Simplify Your Daily Terminal Operations.
+Super Simple Terminal UI Generator
 
 .. image:: https://travis-ci.org/mogproject/easy-menu.svg?branch=v1.0
    :target: https://travis-ci.org/mogproject/easy-menu
@@ -23,6 +23,8 @@ Simplify Your Daily Terminal Operations.
 --------
 Features
 --------
+
+*Simplify your daily terminal operations!*
 
 Do you have any routine tasks such as login to your servers, deploying, troubleshooting or something like that?
 
