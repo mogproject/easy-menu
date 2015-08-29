@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import sys
 
 from easy_menu.util import string_util, term_util
@@ -34,10 +32,10 @@ class Terminal(object):
         self.page_size = page_size
         self._input = _input
         self._output = _output
-        self.encoding = self._find_encode(encoding, _output)
+        self.encoding = self._find_encoding(encoding, _output)
 
     @staticmethod
-    def _find_encode(encoding, output):
+    def _find_encoding(encoding, output):
         if not encoding:
             if hasattr(output, 'encoding'):
                 encoding = output.encoding
@@ -90,7 +88,8 @@ class Terminal(object):
             message,
         ]
 
-    def _get_description(self, item):
+    @staticmethod
+    def _get_description(item):
         d, c = item.items()[0]
         return MSG_SUB_MENU % d if isinstance(c, list) else d
 

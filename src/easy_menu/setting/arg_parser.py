@@ -11,7 +11,7 @@ def __get_parser():
 
     p.add_option(
         '--encode', dest='encoding', default=None, type='string', metavar='ENCODING',
-        help='encoding'
+        help='set output encoding to ENCODING'
     )
 
     return p
