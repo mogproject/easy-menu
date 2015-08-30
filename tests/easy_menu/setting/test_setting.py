@@ -1,6 +1,6 @@
 import sys
 import os
-from easy_menu.setting.setting import Setting
+from easy_menu.setting.setting import Setting, ConfigError
 
 if sys.version_info < (2, 7):
     import unittest2 as unittest
@@ -9,6 +9,17 @@ else:
 
 
 class TestSetting(unittest.TestCase):
+    def _assert_system_exit(self, expected_code, f):
+        with self.assertRaises(SystemExit) as cm:
+            f()
+        if isinstance(cm.exception, int):
+            self.assertEqual(cm.exception, expected_code)
+        else:
+            self.assertEqual(cm.exception.code, expected_code)
+
+    def _testfile(self, filename):
+        return os.path.join(os.path.abspath(os.path.curdir), 'tests/resources', filename)
+
     def test_init(self):
         s1 = Setting()
         self.assertEqual(s1.config_path, None)
@@ -76,4 +87,77 @@ class TestSetting(unittest.TestCase):
         )
 
     def test_parse_args_error(self):
-        self.assertRaises(SystemExit, Setting().parse_args, ['easy-menu', 'a', 'b'])
+        self._assert_system_exit(2, lambda: Setting().parse_args(['easy-menu', 'a', 'b']))
+
+    def test_load_data(self):
+        self.assertEqual(
+            Setting()._load_data(False, 'tests/resources/minimum.yml'),
+            {'': []}
+        )
+        self.assertEqual(
+            Setting()._load_data(False, 'tests/resources/nested.yml'),
+            {'Main Menu': [
+                {'Sub Menu 1': [
+                    {'Menu 1': 'echo 1'},
+                    {'Menu 2': 'echo 2'}
+                ]},
+                {'Sub Menu 2': [
+                    {'Sub Menu 3': [
+                        {'Menu 3': 'echo 3'},
+                        {'Menu 4': 'echo 4'}
+                    ]}, {'Menu 5': 'echo 5'}
+                ]},
+                {'Menu 6': 'echo 6'}]}
+        )
+        self.assertEqual(
+            Setting()._load_data(False, 'tests/resources/with_meta.yml'),
+            {'meta': {'work_dir': '/tmp'},
+             'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
+                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}, ]}
+        )
+        self.assertEqual(
+            Setting(cache={(False, 'https://example.com/foo.yml'): {
+                'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+            })._load_data(False, 'https://example.com/foo.yml'),
+            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+        )
+        self.assertEqual(
+            Setting()._load_data(True, """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
+            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+        )
+
+    def test_load_data_error(self):
+        def f(filename, err, msg):
+            with self.assertRaises(err) as cm:
+                Setting()._load_data(False, os.path.join('tests/resources', filename))
+            self.assertEqual(cm.exception.args[0], msg)
+
+        f('error_not_exist.yml', ConfigError, 'Failed to open: tests/resources/error_not_exist.yml')
+        f('error_parser.yml', ConfigError,
+          'YAML format error: tests/resources/error_parser.yml: expected \'<document start>\', but found \'<scalar>\'\n'
+          '  in "tests/resources/error_parser.yml", line 1, column 3')
+        f('error_scanner.yml', ConfigError,
+          'YAML format error: tests/resources/error_scanner.yml: while scanning a quoted scalar\n  in "tests/resources/'
+          'error_scanner.yml", line 1, column 1\nfound unexpected end of stream\n  in "tests/resources/error_scanner.ym'
+          'l", line 2, column 1')
+
+    def test_load_meta(self):
+        self.assertEqual(
+            Setting(self._testfile('minimum.yml')).load_meta().work_dir,
+            os.path.join(os.path.abspath(os.path.curdir), 'tests/resources')
+        )
+        self.assertEqual(
+            Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
+                'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+            }).load_meta().work_dir,
+            None
+        )
+        self.assertEqual(
+            Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
+                'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}],
+                'meta': {'work_dir': '/tmp'}}
+            }).load_meta().work_dir,
+            '/tmp'
+        )
+        self.assertEqual(Setting(self._testfile('with_meta.yml')).load_meta().work_dir, '/tmp')
+        self.assertEqual(Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp').load_meta().work_dir, '/tmp')

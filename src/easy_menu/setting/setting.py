@@ -80,9 +80,9 @@ class Setting(CaseClass):
         """
         Load data from one file, url or command line, then store to a dict.
 
-        :param is_command: True in case of using command line output
+        :param is_command: True if using command line output
         :param path_or_url_or_cmdline:
-        :return:
+        :return: dict representation of data
         """
 
         if path_or_url_or_cmdline is None:
@@ -107,7 +107,7 @@ class Setting(CaseClass):
             else:
                 # read from file
                 p = path_or_url_or_cmdline
-                if not os.path.isabs(p):
+                if self.work_dir is not None and not os.path.isabs(p):
                     p = os.path.join(self.work_dir, path_or_url_or_cmdline)
                 print('Reading file: %s' % p)
                 data = open(p)
