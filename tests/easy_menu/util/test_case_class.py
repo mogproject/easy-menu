@@ -58,22 +58,5 @@ class TestCaseClass(unittest.TestCase):
         self.assertEqual(Coord(123, 45) < 'x', True)
         self.assertEqual(Coord(123, 45) < AAA(), False)
 
-    def test_case_class_copy(self):
-        a = Coord(123, 45)
-        b = a.copy(y=46)
-        c = b.copy(x=124)
-        d = c.copy()
-        e = d.copy(x=125, y=47)
-
-        self.assertEqual(a, Coord(123, 45))
-        self.assertEqual(b, Coord(123, 46))
-        self.assertEqual(c, Coord(124, 46))
-        self.assertEqual(d, Coord(124, 46))
-        self.assertEqual(e, Coord(125, 47))
-
-    def test_case_class_copy_error(self):
-        a = Coord(123, 45)
-        self.assertRaises(ValueError, lambda: a.copy(a=123))
-
     def test_case_class_repr(self):
         self.assertEqual(repr(Coord(123, 45)), 'Coord(x=123, y=45)')

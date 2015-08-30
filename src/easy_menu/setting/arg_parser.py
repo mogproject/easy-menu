@@ -14,6 +14,11 @@ def __get_parser():
         help='set output encoding to ENCODING'
     )
 
+    p.add_option(
+        '-d', '--work-dir', dest='work_dir', default=None, type='string', metavar='DIR',
+        help='set working directory to DIR'
+    )
+
     return p
 
 

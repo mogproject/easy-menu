@@ -25,6 +25,14 @@ class Setting(CaseClass):
             ('encoding', encoding),
         )
 
+    def copy(self, **args):
+        return Setting(
+            config_path=args.get('config_path', self.config_path),
+            work_dir=args.get('work_dir', self.work_dir),
+            root_menu=args.get('root_menu', self.root_menu),
+            encoding=args.get('encoding', self.encoding),
+        )
+
     @staticmethod
     def _is_url(path):
         return path is not None and bool(URL_PATTERN.match(path))
@@ -49,14 +57,16 @@ class Setting(CaseClass):
             arg_parser.parser.print_help()
             arg_parser.parser.exit(2)
 
-        return self.copy(config_path=path, encoding=option.encoding)
+        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding)
 
     def lookup_config(self):
         if self.config_path is None:
-            d = os.getcwd()
+            d = os.path.abspath(self.work_dir) if self.work_dir else os.getcwd()
+
             while True:
                 path = os.path.join(d, DEFAULT_CONFIG_NAME)
                 if os.path.exists(path):
+                    print(path)
                     return self.copy(config_path=path)
                 nd = os.path.dirname(d)
                 if d == nd:

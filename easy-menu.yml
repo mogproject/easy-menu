@@ -10,3 +10,4 @@ Main Menu:
     - Start web service: "echo Start web service"
     - Stop web service: "echo Stop web service"
   - Reboot this server: "echo Reboot OS"
+  - a: pwd

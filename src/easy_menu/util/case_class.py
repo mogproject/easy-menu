@@ -44,13 +44,5 @@ class CaseClass(object):
                 return 1
         return 0
 
-    def copy(self, **args):
-        n = copy.deepcopy(self)
-        for k in args:
-            if k not in self._keys:
-                raise ValueError('Invalid field name: %s' % k)
-            setattr(n, k, args[k])
-        return n
-
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join('%s=%r' % (k, getattr(self, k)) for k in self._keys))
