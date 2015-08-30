@@ -1,6 +1,6 @@
 import sys
 import os
-from easy_menu.setting.setting import Setting, ConfigError
+from easy_menu.setting.setting import Setting, ConfigError, SettingError
 
 if sys.version_info < (2, 7):
     import unittest2 as unittest
@@ -89,6 +89,17 @@ class TestSetting(unittest.TestCase):
     def test_parse_args_error(self):
         self._assert_system_exit(2, lambda: Setting().parse_args(['easy-menu', 'a', 'b']))
 
+    def test_lookup_config(self):
+        self.assertEqual(Setting('foo.yml').lookup_config(), Setting('foo.yml'))
+        self.assertEqual(Setting().lookup_config(), Setting(os.path.abspath('easy-menu.yml')))
+        self.assertEqual(
+            Setting(work_dir='tests/resources').lookup_config(),
+            Setting(os.path.abspath('easy-menu.yml'), work_dir='tests/resources'))
+
+    def test_lookup_config_not_found(self):
+        assert not os.path.exists('/easy-menu.yml'), 'This test assumes that there does not exist "/easy-menu.yml".'
+        self.assertEqual(Setting(work_dir='/').lookup_config(), Setting(work_dir='/'))
+
     def test_load_data(self):
         self.assertEqual(
             Setting()._load_data(False, 'tests/resources/minimum.yml'),
@@ -113,7 +124,7 @@ class TestSetting(unittest.TestCase):
             Setting()._load_data(False, 'tests/resources/with_meta.yml'),
             {'meta': {'work_dir': '/tmp'},
              'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
-                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}, ]}
+                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
         )
         self.assertEqual(
             Setting(cache={(False, 'https://example.com/foo.yml'): {
@@ -125,6 +136,10 @@ class TestSetting(unittest.TestCase):
             Setting()._load_data(True, """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
             {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
         )
+        self.assertEqual(
+            Setting(work_dir=os.path.abspath('tests/resources'))._load_data(False, 'minimum.yml'),
+            {'': []}
+        )
 
     def test_load_data_error(self):
         def f(filename, err, msg):
@@ -132,12 +147,19 @@ class TestSetting(unittest.TestCase):
                 Setting()._load_data(False, os.path.join('tests/resources', filename))
             self.assertEqual(cm.exception.args[0], msg)
 
-        f('error_not_exist.yml', ConfigError, 'Failed to open: tests/resources/error_not_exist.yml')
+        with self.assertRaises(SettingError) as cm:
+            Setting()._load_data(False, None)
+        self.assertEqual(cm.exception.args[0], 'Not found configuration file.')
+
+        f('error_not_exist.yml', ConfigError,
+          'Configuration error: tests/resources/error_not_exist.yml: Failed to open.')
         f('error_parser.yml', ConfigError,
-          'YAML format error: tests/resources/error_parser.yml: expected \'<document start>\', but found \'<scalar>\'\n'
+          'Configuration error: tests/resources/error_parser.yml: '
+          'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
           '  in "tests/resources/error_parser.yml", line 1, column 3')
         f('error_scanner.yml', ConfigError,
-          'YAML format error: tests/resources/error_scanner.yml: while scanning a quoted scalar\n  in "tests/resources/'
+          'Configuration error: tests/resources/error_scanner.yml: '
+          'YAML format error: while scanning a quoted scalar\n  in "tests/resources/'
           'error_scanner.yml", line 1, column 1\nfound unexpected end of stream\n  in "tests/resources/error_scanner.ym'
           'l", line 2, column 1')
 
@@ -161,3 +183,37 @@ class TestSetting(unittest.TestCase):
         )
         self.assertEqual(Setting(self._testfile('with_meta.yml')).load_meta().work_dir, '/tmp')
         self.assertEqual(Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp').load_meta().work_dir, '/tmp')
+
+    def test_load_config(self):
+        s = Setting(config_path=self._testfile('minimum.yml')).load_config()
+        self.assertEqual(s.root_menu, {'': []})
+
+        s = Setting(config_path=self._testfile('flat.yml')).load_config()
+        self.assertEqual(s.root_menu, {
+            'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
+                          {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]})
+
+        s = Setting(config_path=self._testfile('with_dynamic.yml')).load_config()
+        self.assertEqual(s.root_menu, {
+            'Main Menu': [{'Menu 1': 'echo 1'},
+                          {'Sub Menu': [{'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}]}]})
+
+    def test_load_config_error(self):
+        def prefixed(filename):
+            return 'Configuration error: %s: ' % self._testfile(filename)
+
+        def f(filename, msg):
+            with self.assertRaises(ConfigError) as cm:
+                Setting(config_path=self._testfile(filename)).load_config()
+            self.assertEqual(cm.exception.args[0], prefixed(filename) + msg)
+
+        f('error_command_only.yml', 'Root content must be list, not str.')
+        f('error_include_as_submenu.yml', '"include" section must have string content, not list.')
+        f('error_dynamic_as_submenu.yml', '"dynamic" section must have string content, not list.')
+        f('error_include_loop.yml', 'Nesting level too deep.')
+        f('error_key_only1.yml', 'Content must be string or list, not NoneType.')
+        f('error_key_only2.yml', 'Content must be string or list, not NoneType.')
+        f('error_meta_only.yml', 'Menu should have only one item, not 0.')
+        f('error_multiple_items.yml', 'Menu should have only one item, not 2.')
+        f('error_not_dict1.yml', 'Menu must be dict, not list.')
+        f('error_not_dict2.yml', 'Menu must be dict, not int.')
