@@ -9,7 +9,7 @@ else:
 
 
 class TestSetting(unittest.TestCase):
-    def test_setting_init(self):
+    def test_init(self):
         s1 = Setting()
         self.assertEqual(s1.config_path, None)
         self.assertEqual(s1.work_dir, None)
@@ -40,19 +40,23 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(s5.root_menu, {})
         self.assertEqual(s5.encoding, None)
 
-    def test_setting_is_url(self):
+    def test_is_url(self):
         self.assertEqual(Setting()._is_url('http://example.com/foo.yml'), True)
         self.assertEqual(Setting()._is_url('https://example.com/foo.yml'), True)
         self.assertEqual(Setting()._is_url('ftp://example.com/foo.yml'), False)
         self.assertEqual(Setting()._is_url('/etc/foo/bar.yml'), False)
 
-    def test_setting_parse_args(self):
-        cwd = os.path.abspath(os.path.curdir)
+    def test_parse_args(self):
+        def abspath(path):
+            return os.path.join(os.path.abspath(os.path.curdir), path)
 
-        self.assertEqual(Setting().parse_args(['easy-menu']), Setting())
+        self.assertEqual(
+            Setting().parse_args(['easy-menu']),
+            Setting()
+        )
         self.assertEqual(
             Setting().parse_args(['easy-menu', 'xyz.yml']),
-            Setting(config_path=os.path.join(cwd, 'xyz.yml'))
+            Setting(config_path=abspath('xyz.yml'))
         )
         self.assertEqual(
             Setting().parse_args(['easy-menu', 'http://example.com/xyz.yml']),
@@ -62,3 +66,14 @@ class TestSetting(unittest.TestCase):
             Setting().parse_args(['easy-menu', 'http://example.com/xyz.yml', '-d', '/tmp']),
             Setting(config_path='http://example.com/xyz.yml', work_dir='/tmp')
         )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'http://example.com/xyz.yml', '--work-dir', '/tmp']),
+            Setting(config_path='http://example.com/xyz.yml', work_dir='/tmp')
+        )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', '/path/to/minimum.yml', '--encode', 'utf-8']),
+            Setting(config_path='/path/to/minimum.yml', work_dir='/path/to', encoding='utf-8')
+        )
+
+    def test_parse_args_error(self):
+        self.assertRaises(SystemExit, Setting().parse_args, ['easy-menu', 'a', 'b'])

@@ -13,19 +13,19 @@ class Coord(CaseClass):
 
 
 class TestCaseClass(unittest.TestCase):
-    def test_case_class_init(self):
+    def test_init(self):
         a = Coord(123, 45)
         self.assertEqual(a.x, 123)
         self.assertEqual(a.y, 45)
 
-    def test_case_class_init_error(self):
+    def test_init_error(self):
         class CoordX(CaseClass):
             def __init__(self, x, y):
                 super(CoordX, self).__init__(('x', x), ('x', y))
 
         self.assertRaises(ValueError, lambda: CoordX(123, 45))
 
-    def test_case_class_cmp(self):
+    def test_cmp(self):
         a = Coord(123, 45)
         b = Coord(123, 45)
         c = Coord(123, 46)
@@ -50,7 +50,7 @@ class TestCaseClass(unittest.TestCase):
             True, True, True, True, False,
         ])
 
-    def test_case_class_different_types(self):
+    def test_different_types(self):
         class AAA:
             pass
 
@@ -58,5 +58,5 @@ class TestCaseClass(unittest.TestCase):
         self.assertEqual(Coord(123, 45) < 'x', True)
         self.assertEqual(Coord(123, 45) < AAA(), False)
 
-    def test_case_class_repr(self):
+    def test_repr(self):
         self.assertEqual(repr(Coord(123, 45)), 'Coord(x=123, y=45)')
