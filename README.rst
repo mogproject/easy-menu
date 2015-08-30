@@ -53,7 +53,9 @@ You can try Easy Menu by just two command lines.
 ::
 
     pip install easy-menu
-    easy-menu https://raw.githubusercontent.com/mogproject/easy-menu/master/easy-menu.example.yml
+    easy-menu http://git.io/vGWla
+
+Note: ``http://git.io/vGWla`` will redirect to ``https://raw.githubusercontent.com/mogproject/easy-menu/master/easy-menu.example.yml``
 
 ------------
 Installation
@@ -156,6 +158,17 @@ Example::
     Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command started: echo Condition all green!
     Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command ended with return code: 0
 
+--------------
+Meta Variables
+--------------
+
+You can overwrite options by writing ``meta`` variables to the root configuration file.
+
++-------------------------+---------------------------------------+
+| Option                  | Description                           |
++=========================+=======================================+
+| work_dir                | Path to the working directory         |
++-------------------------+---------------------------------------+
 
 
 ----
