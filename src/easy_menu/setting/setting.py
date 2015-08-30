@@ -140,6 +140,14 @@ class Setting(CaseClass):
         """
 
         def build_config(config, is_root, depth):
+            """
+            Validate and evaluate configuration recursively by using depth-first search.
+
+            :param config: dict of the node or leaf
+            :param is_root: True when the leaf is not allowed
+            :param depth: indicator for the nesting level
+            :return: validated dict of the node or leaf
+            """
             # avoid for inclusion loops and stack overflow
             if depth >= 50:
                 raise ConfigError(self.config_path, 'Nesting level too deep.')

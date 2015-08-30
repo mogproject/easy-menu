@@ -124,7 +124,7 @@ class TestSetting(unittest.TestCase):
             Setting()._load_data(False, 'tests/resources/with_meta.yml'),
             {'meta': {'work_dir': '/tmp'},
              'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
-                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}, ]}
+                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
         )
         self.assertEqual(
             Setting(cache={(False, 'https://example.com/foo.yml'): {
@@ -183,3 +183,29 @@ class TestSetting(unittest.TestCase):
         )
         self.assertEqual(Setting(self._testfile('with_meta.yml')).load_meta().work_dir, '/tmp')
         self.assertEqual(Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp').load_meta().work_dir, '/tmp')
+
+    def test_load_config(self):
+        s = Setting(config_path=self._testfile('minimum.yml')).load_config()
+        self.assertEqual(s.root_menu, {'': []})
+
+        s = Setting(config_path=self._testfile('flat.yml')).load_config()
+        self.assertEqual(s.root_menu, {
+            'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
+                          {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]})
+
+    def test_load_config_error(self):
+        def prefixed(filename):
+            return 'Configuration error: %s: ' % self._testfile(filename)
+
+        def f(filename, msg):
+            with self.assertRaises(ConfigError) as cm:
+                Setting(config_path=self._testfile(filename)).load_config()
+            self.assertEqual(cm.exception.args[0], prefixed(filename) + msg)
+
+        f('error_command_only.yml', 'Root content must be list, not str.')
+        f('error_include_as_submenu.yml', '"include" section must have string content, not list.')
+        f('error_include_loop.yml', 'Nesting level too deep.')
+        f('error_key_only1.yml', 'Content must be string or list, not NoneType.')
+        f('error_key_only2.yml', 'Content must be string or list, not NoneType.')
+        f('error_meta_only.yml', 'Menu should have only one item, not 0.')
+        f('error_multiple_items.yml', 'Menu should have only one item, not 2.')
