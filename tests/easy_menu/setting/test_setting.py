@@ -151,12 +151,15 @@ class TestSetting(unittest.TestCase):
             Setting()._load_data(False, None)
         self.assertEqual(cm.exception.args[0], 'Not found configuration file.')
 
-        f('error_not_exist.yml', ConfigError, 'Failed to open: tests/resources/error_not_exist.yml')
+        f('error_not_exist.yml', ConfigError,
+          'Configuration error: tests/resources/error_not_exist.yml: Failed to open.')
         f('error_parser.yml', ConfigError,
-          'YAML format error: tests/resources/error_parser.yml: expected \'<document start>\', but found \'<scalar>\'\n'
+          'Configuration error: tests/resources/error_parser.yml: '
+          'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
           '  in "tests/resources/error_parser.yml", line 1, column 3')
         f('error_scanner.yml', ConfigError,
-          'YAML format error: tests/resources/error_scanner.yml: while scanning a quoted scalar\n  in "tests/resources/'
+          'Configuration error: tests/resources/error_scanner.yml: '
+          'YAML format error: while scanning a quoted scalar\n  in "tests/resources/'
           'error_scanner.yml", line 1, column 1\nfound unexpected end of stream\n  in "tests/resources/error_scanner.ym'
           'l", line 2, column 1')
 

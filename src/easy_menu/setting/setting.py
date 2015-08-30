@@ -4,7 +4,7 @@ import yaml
 from urllib2 import urlopen
 import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
-from easy_menu.util import CaseClass, cmd_util
+from easy_menu.util import CaseClass, cmd_util, string_util
 
 DEFAULT_CONFIG_NAME = 'easy-menu.yml'
 URL_PATTERN = re.compile(r'^http[s]?://')
@@ -88,6 +88,12 @@ class Setting(CaseClass):
         if path_or_url_or_cmdline is None:
             raise SettingError('Not found configuration file.')
 
+        # normalize file path
+        is_url = self._is_url(path_or_url_or_cmdline)
+        if not is_command and not is_url:
+            if self.work_dir is not None and not os.path.isabs(path_or_url_or_cmdline):
+                path_or_url_or_cmdline = os.path.join(self.work_dir, path_or_url_or_cmdline)
+
         # if already loaded, use cache data
         c = self.cache.get((is_command, path_or_url_or_cmdline))
         if c is not None:
@@ -106,19 +112,16 @@ class Setting(CaseClass):
                 data = urlopen(path_or_url_or_cmdline)
             else:
                 # read from file
-                p = path_or_url_or_cmdline
-                if self.work_dir is not None and not os.path.isabs(p):
-                    p = os.path.join(self.work_dir, path_or_url_or_cmdline)
-                print('Reading file: %s' % p)
-                data = open(p)
+                print('Reading file: %s' % path_or_url_or_cmdline)
+                data = open(path_or_url_or_cmdline)
             menu = yaml.load(data)
 
             # update cache data
             self.cache[(is_command, path_or_url_or_cmdline)] = menu
         except IOError:
-            raise ConfigError('Failed to open: %s' % path_or_url_or_cmdline)
+            raise ConfigError(path_or_url_or_cmdline, 'Failed to open.')
         except yaml.YAMLError as e:
-            raise ConfigError('YAML format error: %s: %s' % (path_or_url_or_cmdline, e))
+            raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % e)
         return menu
 
     def load_meta(self):
@@ -135,7 +138,46 @@ class Setting(CaseClass):
         If it contains 'include' sections, load them recursively.
         :return: updated Setting instance
         """
-        root_menu = self._load_data(False, self.config_path)
 
-        # TODO: verify and evaluate includes
+        def build_config(config, is_root, depth):
+            # avoid for inclusion loops and stack overflow
+            if depth >= 50:
+                raise ConfigError(self.config_path, 'Nesting level too deep.')
+
+            # config should be a dict which contains only one item except 'meta'
+            if not isinstance(config, dict):
+                raise ConfigError(self.config_path, 'Menu must be dict, not %s.' % type(config))
+
+            config = dict((k, v) for k, v in config.items() if k not in ['meta'])
+
+            if len(config) != 1:
+                raise ConfigError(self.config_path, 'Menu should have only one item, not %s.' % len(config))
+
+            name, content = config.items()[0]
+            t = type(content).__name__
+
+            if name == 'include':
+                # content should be a leaf
+                if not isinstance(content, basestring):
+                    raise ConfigError(self.config_path, '"include" section must have string content, not %s.' % t)
+
+                return build_config(self._load_data(False, content), True, depth + 1)
+            elif name == 'dynamic':
+                # content should be a leaf
+                if not isinstance(content, basestring):
+                    raise ConfigError(self.config_path, '"dynamic" section must have string content, not %s.' % t)
+
+                return build_config(self._load_data(True, content), True, depth + 1)
+            else:
+                if isinstance(content, list):
+                    content = [build_config(child, False, depth + 1) for child in content]
+                elif isinstance(content, basestring):
+                    if is_root:
+                        raise ConfigError(self.config_path, 'Root content must be list, not %s.' % t)
+                else:
+                    raise ConfigError(self.config_path, 'Content must be string or list, not %s.' % t)
+            return {string_util.to_unicode(name, self.encoding): content}
+
+        root_menu = build_config(self._load_data(False, self.config_path), True, 0)
+
         return self.copy(root_menu=root_menu)

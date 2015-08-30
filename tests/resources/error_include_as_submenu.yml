@@ -1,0 +1,4 @@
+---
+Main Menu:
+  include:
+    - xxx: echo xxx
