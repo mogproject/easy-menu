@@ -36,7 +36,7 @@ def getch(_input=sys.stdin):
 
     # check key repeat
     if LAST_GETCH_CHAR == ch:
-        if t < LAST_GETCH_TIME + 0.2:
+        if t < LAST_GETCH_TIME + 0.3:
             LAST_GETCH_TIME = t
             return ''
 
