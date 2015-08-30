@@ -41,7 +41,7 @@ It should be helpful not only for salted engineers but unskilled operators.
 Dependencies
 ------------
 
-* Python: 2.6 / 2.7
+* Python: 2.6 / 2.7  (Now working for 3.x support)
 * pyyaml
 
 ----------
@@ -53,7 +53,7 @@ You can try Easy Menu by just two command lines.
 ::
 
     pip install easy-menu
-    easy-menu https://raw.githubusercontent.com/mogproject/easy-menu/v1.0/easy-menu.yml
+    easy-menu https://raw.githubusercontent.com/mogproject/easy-menu/master/easy-menu.example.yml
 
 ------------
 Installation
@@ -83,7 +83,7 @@ See an example below.
 Configuration Example
 ---------------------
 
-::
+``easy-menu.example.yml``::
 
     Main Menu:
       - Service health check: "echo Condition all green!"
@@ -112,10 +112,14 @@ In case its value is a *Sequence*, the sub menu will be generated. The generic s
       - SUB_MENU_TITLE:              # You can create sub menu if you need.
         - ITEM_DESCRIPTION: COMMAND
         - ITEM_DESCRIPTION: COMMAND
-      - include: INCLUDE_FILE_PATH   # "include" keyword enables to load another configuration file.
-      - eval: EVAL_COMMAND           # "eval" keyword will execute command line and use its output as configuration.
+      - include: INCLUDE_FILE_PATH   # "include" keyword enables to load
+                                     # another configuration file.
+      - eval: EVAL_COMMAND           # "eval" keyword will execute command line
+                                     # and use its output as configuration YAML string.
 
 Remember these commands are executed after changing the current directory to the directory which holds the configuration file by default.
+
+You can find more examples in `this directory <https://github.com/mogproject/easy-menu/tree/master/tests/resources>`_.
 
 -----------
 Lookup Path
@@ -145,4 +149,4 @@ Audit Logging
 
 ----
 
-Looking for legacy version? Please refer to `v0.0_ <https://github.com/mogproject/easy-menu/tree/v0.0>`_.
+Looking for legacy version? Please refer to `v0.0 <https://github.com/mogproject/easy-menu/tree/v0.0>`_.
