@@ -6,7 +6,7 @@ import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
 from easy_menu.util import CaseClass, cmd_util, string_util
 
-DEFAULT_CONFIG_NAME = 'easy-menu.yml'
+DEFAULT_CONFIG_NAME = os.environ.get('EASY_MENU_CONFIG', 'easy-menu.yml')
 URL_PATTERN = re.compile(r'^http[s]?://')
 
 
@@ -116,7 +116,7 @@ class Setting(CaseClass):
                 data = open(path_or_url_or_cmdline)
             menu = yaml.load(data)
 
-            # update cache data
+            # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu
         except IOError:
             raise ConfigError(path_or_url_or_cmdline, 'Failed to open.')
@@ -170,10 +170,10 @@ class Setting(CaseClass):
                     raise ConfigError(self.config_path, '"include" section must have string content, not %s.' % t)
 
                 return build_config(self._load_data(False, content), True, depth + 1)
-            elif name == 'dynamic':
+            elif name == 'eval':
                 # content should be a leaf
                 if not isinstance(content, basestring):
-                    raise ConfigError(self.config_path, '"dynamic" section must have string content, not %s.' % t)
+                    raise ConfigError(self.config_path, '"eval" section must have string content, not %s.' % t)
 
                 return build_config(self._load_data(True, content), True, depth + 1)
             else:

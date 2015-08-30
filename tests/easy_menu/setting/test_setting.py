@@ -91,10 +91,19 @@ class TestSetting(unittest.TestCase):
 
     def test_lookup_config(self):
         self.assertEqual(Setting('foo.yml').lookup_config(), Setting('foo.yml'))
-        self.assertEqual(Setting().lookup_config(), Setting(os.path.abspath('easy-menu.yml')))
-        self.assertEqual(
-            Setting(work_dir='tests/resources').lookup_config(),
-            Setting(os.path.abspath('easy-menu.yml'), work_dir='tests/resources'))
+
+        import easy_menu.setting.setting
+
+        old = easy_menu.setting.setting.DEFAULT_CONFIG_NAME
+        easy_menu.setting.setting.DEFAULT_CONFIG_NAME = 'easy-menu.example.yml'
+
+        try:
+            self.assertEqual(Setting().lookup_config(), Setting(os.path.abspath('easy-menu.example.yml')))
+            self.assertEqual(
+                Setting(work_dir='tests/resources').lookup_config(),
+                Setting(os.path.abspath('easy-menu.example.yml'), work_dir='tests/resources'))
+        finally:
+            easy_menu.setting.setting.DEFAULT_CONFIG_NAME = old
 
     def test_lookup_config_not_found(self):
         assert not os.path.exists('/easy-menu.yml'), 'This test assumes that there does not exist "/easy-menu.yml".'
@@ -209,7 +218,7 @@ class TestSetting(unittest.TestCase):
 
         f('error_command_only.yml', 'Root content must be list, not str.')
         f('error_include_as_submenu.yml', '"include" section must have string content, not list.')
-        f('error_dynamic_as_submenu.yml', '"dynamic" section must have string content, not list.')
+        f('error_dynamic_as_submenu.yml', '"eval" section must have string content, not list.')
         f('error_include_loop.yml', 'Nesting level too deep.')
         f('error_key_only1.yml', 'Content must be string or list, not NoneType.')
         f('error_key_only2.yml', 'Content must be string or list, not NoneType.')
