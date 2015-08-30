@@ -154,7 +154,7 @@ class Setting(CaseClass):
 
             # config should be a dict which contains only one item except 'meta'
             if not isinstance(config, dict):
-                raise ConfigError(self.config_path, 'Menu must be dict, not %s.' % type(config))
+                raise ConfigError(self.config_path, 'Menu must be dict, not %s.' % type(config).__name__)
 
             config = dict((k, v) for k, v in config.items() if k not in ['meta'])
 

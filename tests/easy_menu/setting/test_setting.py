@@ -193,6 +193,11 @@ class TestSetting(unittest.TestCase):
             'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]})
 
+        s = Setting(config_path=self._testfile('with_dynamic.yml')).load_config()
+        self.assertEqual(s.root_menu, {
+            'Main Menu': [{'Menu 1': 'echo 1'},
+                          {'Sub Menu': [{'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}]}]})
+
     def test_load_config_error(self):
         def prefixed(filename):
             return 'Configuration error: %s: ' % self._testfile(filename)
@@ -204,8 +209,11 @@ class TestSetting(unittest.TestCase):
 
         f('error_command_only.yml', 'Root content must be list, not str.')
         f('error_include_as_submenu.yml', '"include" section must have string content, not list.')
+        f('error_dynamic_as_submenu.yml', '"dynamic" section must have string content, not list.')
         f('error_include_loop.yml', 'Nesting level too deep.')
         f('error_key_only1.yml', 'Content must be string or list, not NoneType.')
         f('error_key_only2.yml', 'Content must be string or list, not NoneType.')
         f('error_meta_only.yml', 'Menu should have only one item, not 0.')
         f('error_multiple_items.yml', 'Menu should have only one item, not 2.')
+        f('error_not_dict1.yml', 'Menu must be dict, not list.')
+        f('error_not_dict2.yml', 'Menu must be dict, not int.')

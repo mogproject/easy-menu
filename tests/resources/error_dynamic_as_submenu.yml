@@ -1,0 +1,4 @@
+---
+Main Menu:
+  - dynamic:
+    - xxx: echo xxx
