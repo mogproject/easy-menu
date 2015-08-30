@@ -9,7 +9,7 @@ def __get_parser():
     p = OptionParser(version=VERSION, usage=USAGE)
 
     p.add_option(
-        '--encode', dest='encoding', default=None, type='string', metavar='ENCODING',
+        '--encode', dest='encoding', default='utf-8', type='string', metavar='ENCODING',
         help='set output encoding to ENCODING'
     )
 
