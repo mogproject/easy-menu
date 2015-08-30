@@ -1,4 +1,4 @@
 ---
 Main Menu:
   - Menu 1: echo 1
-  - dynamic: "echo '{\"Sub Menu\": [{\"Menu 2\": \"echo 2\"}, {\"Menu 3\": \"echo 3\"}]}'"
+  - eval: "echo '{\"Sub Menu\": [{\"Menu 2\": \"echo 2\"}, {\"Menu 3\": \"echo 3\"}]}'"

@@ -7,7 +7,10 @@ class CommandExecutor(object):
         self.logger = logger
 
     def execute(self, cmd, stdin, stdout, stderr):
+        self.logger.info('Command started: %s' % cmd)
         ret_code = cmd_util.execute_command(cmd, self.work_dir, stdin, stdout, stderr)
 
-        # TODO: logging
+        # log result
+        self.logger.info('Command ended with return code: %d' % ret_code)
+
         return ret_code

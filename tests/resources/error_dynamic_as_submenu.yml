@@ -1,4 +1,4 @@
 ---
 Main Menu:
-  - dynamic:
+  - eval:
     - xxx: echo xxx
