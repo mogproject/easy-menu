@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import os
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
@@ -25,31 +27,31 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(s1.config_path, None)
         self.assertEqual(s1.work_dir, None)
         self.assertEqual(s1.root_menu, {})
-        self.assertEqual(s1.encoding, None)
+        self.assertEqual(s1.encoding, 'utf-8')
 
         s2 = Setting('tests/resources/minimum.yml')
         self.assertEqual(s2.config_path, 'tests/resources/minimum.yml')
         self.assertEqual(s2.work_dir, 'tests/resources')
         self.assertEqual(s2.root_menu, {})
-        self.assertEqual(s2.encoding, None)
+        self.assertEqual(s2.encoding, 'utf-8')
 
         s3 = Setting('https://example.com/resources/minimum.yml')
         self.assertEqual(s3.config_path, 'https://example.com/resources/minimum.yml')
         self.assertEqual(s3.work_dir, None)
         self.assertEqual(s3.root_menu, {})
-        self.assertEqual(s3.encoding, None)
+        self.assertEqual(s3.encoding, 'utf-8')
 
         s4 = Setting('tests/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s4.config_path, 'tests/resources/minimum.yml')
         self.assertEqual(s4.work_dir, '/tmp')
         self.assertEqual(s4.root_menu, {})
-        self.assertEqual(s4.encoding, None)
+        self.assertEqual(s4.encoding, 'utf-8')
 
         s5 = Setting('https://example.com/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s5.config_path, 'https://example.com/resources/minimum.yml')
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
-        self.assertEqual(s5.encoding, None)
+        self.assertEqual(s5.encoding, 'utf-8')
 
     def test_is_url(self):
         self.assertEqual(Setting()._is_url('http://example.com/foo.yml'), True)
@@ -149,6 +151,27 @@ class TestSetting(unittest.TestCase):
             Setting(work_dir=os.path.abspath('tests/resources'))._load_data(False, 'minimum.yml'),
             {'': []}
         )
+        # SJIS
+        self.assertEqual(
+            Setting(encoding='sjis')._load_data(False, 'tests/resources/sjis_ja.yml'),
+            {
+                u"メインメニュー": [
+                    {u"サービス稼動状態確認": u"echo 'サービス稼動状態確認'"},
+                    {u"サーバリソース状況確認": u"echo 'サーバリソース状況確認'"},
+                    {u"業務状態制御メニュー": [
+                        {u"業務状態確認": u"echo '業務状態確認'"},
+                        {u"業務開始": u"echo '業務開始'"},
+                        {u"業務終了": u"echo '業務終了'"}
+                    ]},
+                    {u"Webサービス制御メニュー": [
+                        {u"Webサービス状態確認": u"echo 'Webサービス状態確認'"},
+                        {u"Webサービス起動": u"echo 'Webサービス起動'"},
+                        {u"Webサービス停止": u"echo 'Webサービス停止'"}
+                    ]},
+                    {u"サーバ再起動": u"echo 'サーバ再起動'"}
+                ]
+            }
+        )
 
     def test_load_data_error(self):
         def f(filename, err, msg):
@@ -165,12 +188,11 @@ class TestSetting(unittest.TestCase):
         f('error_parser.yml', ConfigError,
           'Configuration error: tests/resources/error_parser.yml: '
           'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
-          '  in "tests/resources/error_parser.yml", line 1, column 3')
+          '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      ^')
         f('error_scanner.yml', ConfigError,
           'Configuration error: tests/resources/error_scanner.yml: '
-          'YAML format error: while scanning a quoted scalar\n  in "tests/resources/'
-          'error_scanner.yml", line 1, column 1\nfound unexpected end of stream\n  in "tests/resources/error_scanner.ym'
-          'l", line 2, column 1')
+          'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "\n    ^'
+          '\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    ^')
 
     def test_load_meta(self):
         self.assertEqual(

@@ -15,7 +15,7 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, cache=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding='utf-8', cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
@@ -109,12 +109,12 @@ class Setting(CaseClass):
             elif self._is_url(path_or_url_or_cmdline):
                 # read from URL
                 print('Reading from URL: %s' % path_or_url_or_cmdline)
-                data = urlopen(path_or_url_or_cmdline)
+                data = urlopen(path_or_url_or_cmdline).read()
             else:
                 # read from file
                 print('Reading file: %s' % path_or_url_or_cmdline)
-                data = open(path_or_url_or_cmdline)
-            menu = yaml.load(data)
+                data = open(path_or_url_or_cmdline).read()
+            menu = yaml.load(data.decode(self.encoding))
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu
