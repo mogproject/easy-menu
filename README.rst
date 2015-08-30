@@ -103,7 +103,7 @@ Configuration Example
 Each menu (i.e. root menu and sub menu) and each item is represented as *Mapping* which contains just one key-value pair.
 In case its value is a *Sequence*, the sub menu will be generated.
 
-The generic syntax is like this.
+The general syntax is like this.
 
 ::
 
@@ -133,7 +133,7 @@ Lookup Path
 -----------
 
 Similar to `Vagrant <https://docs.vagrantup.com/v2/vagrantfile/>`_, when you run any ``easy-menu`` command, Easy Menu climbs up the directory tree looking for the first ``easy-menu.yml`` it can find, starting first in the current directory.
-So if you run ``easy-menu`` in /home/mogproject/projects/foo, it will search the following paths in order for a ``easy-menu.yml``, until it finds one:
+So if you run ``easy-menu`` in ``/home/mogproject/projects/foo``, it will search the following paths in order for a ``easy-menu.yml``, until it finds one:
 
 ::
 
