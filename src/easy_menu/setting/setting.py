@@ -4,7 +4,7 @@ import yaml
 from urllib2 import urlopen
 import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
-from easy_menu.util import CaseClass
+from easy_menu.util import CaseClass, cmd_util
 
 DEFAULT_CONFIG_NAME = 'easy-menu.yml'
 URL_PATTERN = re.compile(r'^http[s]?://')
@@ -15,14 +15,14 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
-            ('is_url', is_url),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
             ('encoding', encoding),
+            ('cache', {} if cache is None else cache)
         )
 
     def copy(self, **args):
@@ -31,6 +31,7 @@ class Setting(CaseClass):
             work_dir=args.get('work_dir', self.work_dir),
             root_menu=args.get('root_menu', self.root_menu),
             encoding=args.get('encoding', self.encoding),
+            cache=args.get('cache', self.cache),
         )
 
     @staticmethod
@@ -53,6 +54,8 @@ class Setting(CaseClass):
             pass
         elif len(args) == 1:
             path = args[0]
+            if not self._is_url(path):
+                path = os.path.abspath(path)
         else:
             arg_parser.parser.print_help()
             arg_parser.parser.exit(2)
@@ -66,7 +69,6 @@ class Setting(CaseClass):
             while True:
                 path = os.path.join(d, DEFAULT_CONFIG_NAME)
                 if os.path.exists(path):
-                    print(path)
                     return self.copy(config_path=path)
                 nd = os.path.dirname(d)
                 if d == nd:
@@ -74,18 +76,57 @@ class Setting(CaseClass):
                 d = nd
         return self
 
-    def _load_url_or_file(self, path):
+    def _load_data(self, is_command, path_or_url_or_cmdline):
+        """
+        Load data from one file, url or command line, then store to a dict.
+
+        :param is_command: True in case of using command line output
+        :param path_or_url_or_cmdline:
+        :return:
+        """
+
+        if path_or_url_or_cmdline is None:
+            raise SettingError('Not found configuration file.')
+
+        # if already loaded, use cache data
+        c = self.cache.get((is_command, path_or_url_or_cmdline))
+        if c is not None:
+            return c
+
         try:
-            if self.is_url:
-                f = urlopen(path)
+            if is_command:
+                # execute command
+                print('Executing: %s' % path_or_url_or_cmdline)
+
+                # ignore return code and stderr
+                data = cmd_util.capture_command(path_or_url_or_cmdline, self.work_dir)[1]
+            elif self._is_url(path_or_url_or_cmdline):
+                # read from URL
+                print('Reading from URL: %s' % path_or_url_or_cmdline)
+                data = urlopen(path_or_url_or_cmdline)
             else:
-                f = open(path)
-            config = yaml.load(f)
+                # read from file
+                p = path_or_url_or_cmdline
+                if not os.path.isabs(p):
+                    p = os.path.join(self.work_dir, path_or_url_or_cmdline)
+                print('Reading file: %s' % p)
+                data = open(p)
+            menu = yaml.load(data)
+
+            # update cache data
+            self.cache[(is_command, path_or_url_or_cmdline)] = menu
         except IOError:
-            raise ConfigError('Failed to open file: %s' % path)
+            raise ConfigError('Failed to open: %s' % path_or_url_or_cmdline)
         except yaml.YAMLError as e:
-            raise ConfigError('YAML format error: %s: %s' % (path, e))
-        return config
+            raise ConfigError('YAML format error: %s: %s' % (path_or_url_or_cmdline, e))
+        return menu
+
+    def load_meta(self):
+        root_menu = self._load_data(False, self.config_path)
+
+        # overwrite working directory
+        work_dir = root_menu.get('meta', {}).get('work_dir')
+        return self.copy(work_dir=work_dir)
 
     def load_config(self):
         """
@@ -94,10 +135,7 @@ class Setting(CaseClass):
         If it contains 'include' sections, load them recursively.
         :return: updated Setting instance
         """
-        if self.config_path is None:
-            raise SettingError('Not found configuration file.')
-
-        root_menu = self._load_url_or_file(self.config_path)
+        root_menu = self._load_data(False, self.config_path)
 
         # TODO: verify and evaluate includes
         return self.copy(root_menu=root_menu)

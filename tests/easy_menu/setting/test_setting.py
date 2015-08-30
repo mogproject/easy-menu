@@ -1,4 +1,5 @@
 import sys
+import os
 from easy_menu.setting.setting import Setting
 
 if sys.version_info < (2, 7):
@@ -11,35 +12,53 @@ class TestSetting(unittest.TestCase):
     def test_setting_init(self):
         s1 = Setting()
         self.assertEqual(s1.config_path, None)
-        self.assertEqual(s1.is_url, False)
         self.assertEqual(s1.work_dir, None)
         self.assertEqual(s1.root_menu, {})
         self.assertEqual(s1.encoding, None)
 
         s2 = Setting('tests/resources/minimum.yml')
         self.assertEqual(s2.config_path, 'tests/resources/minimum.yml')
-        self.assertEqual(s2.is_url, False)
         self.assertEqual(s2.work_dir, 'tests/resources')
         self.assertEqual(s2.root_menu, {})
         self.assertEqual(s2.encoding, None)
 
         s3 = Setting('https://example.com/resources/minimum.yml')
         self.assertEqual(s3.config_path, 'https://example.com/resources/minimum.yml')
-        self.assertEqual(s3.is_url, True)
         self.assertEqual(s3.work_dir, None)
         self.assertEqual(s3.root_menu, {})
         self.assertEqual(s3.encoding, None)
 
         s4 = Setting('tests/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s4.config_path, 'tests/resources/minimum.yml')
-        self.assertEqual(s4.is_url, False)
         self.assertEqual(s4.work_dir, '/tmp')
         self.assertEqual(s4.root_menu, {})
         self.assertEqual(s4.encoding, None)
 
         s5 = Setting('https://example.com/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s5.config_path, 'https://example.com/resources/minimum.yml')
-        self.assertEqual(s5.is_url, True)
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
         self.assertEqual(s5.encoding, None)
+
+    def test_setting_is_url(self):
+        self.assertEqual(Setting()._is_url('http://example.com/foo.yml'), True)
+        self.assertEqual(Setting()._is_url('https://example.com/foo.yml'), True)
+        self.assertEqual(Setting()._is_url('ftp://example.com/foo.yml'), False)
+        self.assertEqual(Setting()._is_url('/etc/foo/bar.yml'), False)
+
+    def test_setting_parse_args(self):
+        cwd = os.path.abspath(os.path.curdir)
+
+        self.assertEqual(Setting().parse_args(['easy-menu']), Setting())
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'xyz.yml']),
+            Setting(config_path=os.path.join(cwd, 'xyz.yml'))
+        )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'http://example.com/xyz.yml']),
+            Setting(config_path='http://example.com/xyz.yml')
+        )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'http://example.com/xyz.yml', '-d', '/tmp']),
+            Setting(config_path='http://example.com/xyz.yml', work_dir='/tmp')
+        )

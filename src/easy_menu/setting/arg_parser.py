@@ -2,8 +2,7 @@ from optparse import OptionParser
 
 VERSION = 'easy-menu %s' % __import__('easy_menu').__version__
 
-USAGE = """
-%prog [options] [CONFIG_PATH | CONFIG_URL]"""
+USAGE = """%prog [options...] [<config_path> | <config_url>]"""
 
 
 def __get_parser():
