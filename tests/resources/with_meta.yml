@@ -1,0 +1,11 @@
+---
+meta:
+  work_dir: /tmp
+
+Main Menu:
+  - Menu 1: echo 1
+  - Menu 2: echo 2
+  - Menu 3: echo 3
+  - Menu 4: echo 4
+  - Menu 5: echo 5
+  - Menu 6: echo 6

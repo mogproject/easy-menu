@@ -1,0 +1,7 @@
+---
+Main Menu:
+  - Menu 1: echo 1
+  - include: flat.yml
+  - 2.0:
+    - include: flat.yml
+  - include: flat_long.yml

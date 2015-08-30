@@ -1,0 +1,4 @@
+---
+Main Menu:
+  - eval:
+    - xxx: echo xxx

@@ -1,0 +1,4 @@
+---
+Main Menu:
+  - Menu 1: echo 1
+  - eval: "echo '{\"Sub Menu\": [{\"Menu 2\": \"echo 2\"}, {\"Menu 3\": \"echo 3\"}]}'"
