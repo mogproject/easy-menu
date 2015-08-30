@@ -89,6 +89,17 @@ class TestSetting(unittest.TestCase):
     def test_parse_args_error(self):
         self._assert_system_exit(2, lambda: Setting().parse_args(['easy-menu', 'a', 'b']))
 
+    def test_lookup_config(self):
+        self.assertEqual(Setting('foo.yml').lookup_config(), Setting('foo.yml'))
+        self.assertEqual(Setting().lookup_config(), Setting(os.path.abspath('easy-menu.yml')))
+        self.assertEqual(
+            Setting(work_dir='tests/resources').lookup_config(),
+            Setting(os.path.abspath('easy-menu.yml'), work_dir='tests/resources'))
+
+    def test_lookup_config_not_found(self):
+        assert not os.path.exists('/easy-menu.yml'), 'This test assumes that there does not exist "/easy-menu.yml".'
+        self.assertEqual(Setting(work_dir='/').lookup_config(), Setting(work_dir='/'))
+
     def test_load_data(self):
         self.assertEqual(
             Setting()._load_data(False, 'tests/resources/minimum.yml'),
@@ -124,6 +135,10 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(
             Setting()._load_data(True, """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
             {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+        )
+        self.assertEqual(
+            Setting(work_dir=os.path.abspath('tests/resources'))._load_data(False, 'minimum.yml'),
+            {'': []}
         )
 
     def test_load_data_error(self):
