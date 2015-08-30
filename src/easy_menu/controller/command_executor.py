@@ -1,4 +1,4 @@
-import subprocess
+from easy_menu.util import cmd_util
 
 
 class CommandExecutor(object):
@@ -6,18 +6,8 @@ class CommandExecutor(object):
         self.work_dir = work_dir
         self.logger = logger
 
-    def execute(self, command_str, stdin, stdout, stderr):
-        try:
-            ret_code = subprocess.call(
-                command_str,
-                shell=True,
-                stdin=stdin,
-                stdout=stdout,
-                stderr=stderr,
-                cwd=self.work_dir,
-            )
-        except KeyboardInterrupt:
-            ret_code = 130
+    def execute(self, cmd, stdin, stdout, stderr):
+        ret_code = cmd_util.execute_command(cmd, self.work_dir, stdin, stdout, stderr)
 
         # TODO: logging
         return ret_code

@@ -1,0 +1,5 @@
+---
+'Main Menu':
+  - pwd: pwd
+  - ls: ls
+  - ls -l: ls -l
