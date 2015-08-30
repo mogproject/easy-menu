@@ -41,7 +41,7 @@ It should be helpful not only for salted engineers but unskilled operators.
 Dependencies
 ------------
 
-* Python: 2.6 / 2.7  (Now working for 3.x support)
+* Python: 2.6 / 2.7  (Now struggling for 3.x support)
 * pyyaml
 
 ----------
