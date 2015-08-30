@@ -1,6 +1,6 @@
 import sys
 import os
-from easy_menu.setting.setting import Setting, ConfigError
+from easy_menu.setting.setting import Setting, ConfigError, SettingError
 
 if sys.version_info < (2, 7):
     import unittest2 as unittest
@@ -131,6 +131,10 @@ class TestSetting(unittest.TestCase):
             with self.assertRaises(err) as cm:
                 Setting()._load_data(False, os.path.join('tests/resources', filename))
             self.assertEqual(cm.exception.args[0], msg)
+
+        with self.assertRaises(SettingError) as cm:
+            Setting()._load_data(False, None)
+        self.assertEqual(cm.exception.args[0], 'Not found configuration file.')
 
         f('error_not_exist.yml', ConfigError, 'Failed to open: tests/resources/error_not_exist.yml')
         f('error_parser.yml', ConfigError,
