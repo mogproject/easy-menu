@@ -2,7 +2,7 @@
 Easy Menu
 =========
 
-Super Simple Terminal UI Generator
+Super Simple Terminal Command Launcher Generator
 
 .. image:: https://badge.fury.io/py/easy-menu.svg
    :target: http://badge.fury.io/py/easy-menu
@@ -99,7 +99,9 @@ Configuration Example
       - Reboot this server: "echo Reboot OS"
 
 Each menu (i.e. root menu and sub menu) and each item is represented as *Mapping* which contains just one key-value pair.
-In case its value is a *Sequence*, the sub menu will be generated. The generic syntax is like this.
+In case its value is a *Sequence*, the sub menu will be generated.
+
+The generic syntax is like this.
 
 ::
 
@@ -112,10 +114,13 @@ In case its value is a *Sequence*, the sub menu will be generated. The generic s
       - SUB_MENU_TITLE:              # You can create sub menu if you need.
         - ITEM_DESCRIPTION: COMMAND
         - ITEM_DESCRIPTION: COMMAND
+        - SUB_MENU_TITLE:            # More nested menu
+          - ITEM_DESCRIPTION: COMMAND
+          - ITEM_DESCRIPTION: COMMAND
       - include: INCLUDE_FILE_PATH   # "include" keyword enables to load
-                                     # another configuration file.
-      - eval: EVAL_COMMAND           # "eval" keyword will execute command line
-                                     # and use its output as configuration YAML string.
+                                     #   another configuration file.
+      - eval: COMMAND                # "eval" keyword will execute command line
+                                     #   and use its output as configuration YAML string.
 
 Remember these commands are executed after changing the current directory to the directory which holds the configuration file by default.
 
@@ -144,7 +149,13 @@ You can change default name of the configuration file by setting the ``EASY_MENU
 Audit Logging
 -------------
 
-(todo)
+Anytime you execute the command, the result (return code) will be recorded to the system log in your operating system.
+
+Example::
+
+    Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command started: echo Condition all green!
+    Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command ended with return code: 0
+
 
 
 ----
