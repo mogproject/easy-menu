@@ -53,6 +53,10 @@ class TestCaseClass(TestCase):
         class AAA:
             pass
 
+        self.assertEqual(Coord(123, 45) == 10, False)
+        self.assertEqual(Coord(123, 45) == 'x', False)
+        self.assertEqual(Coord(123, 45) == AAA(), False)
+
         self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < int\(\)$', lambda: Coord(123, 45) < 10)
         self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < ', lambda: Coord(123, 45) < 'x')
         self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < AAA\(\)$', lambda: Coord(123, 45) < AAA())

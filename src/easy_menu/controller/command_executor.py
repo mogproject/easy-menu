@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-from easy_menu.util import cmd_util, string_util
+from easy_menu.util import cmd_util
 
 
 class CommandExecutor(object):
@@ -12,8 +12,8 @@ class CommandExecutor(object):
         if self.logger:
             self.logger.info(msg)
 
-    def execute(self, cmd, stdin, stdout, stderr):
-        self._log_info('Command started: %s' % string_util.to_unicode(cmd))
-        ret_code = cmd_util.execute_command(cmd, self.work_dir, stdin, stdout, stderr)
+    def execute(self, cmd, stdin, stdout, stderr, encoding):
+        self._log_info('Command started: %s' % cmd)
+        ret_code = cmd_util.execute_command(cmd, self.work_dir, stdin, stdout, stderr, encoding)
         self._log_info('Command ended with return code: %d' % ret_code)
         return ret_code
