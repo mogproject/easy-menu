@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import sys
 import os
+import six
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
 from tests.universal import TestCase
 from tests.fake_io import captured_output
@@ -30,7 +32,6 @@ class TestSetting(TestCase):
         self.assertEqual(s1.config_path, None)
         self.assertEqual(s1.work_dir, None)
         self.assertEqual(s1.root_menu, {})
-        self.assertEqual(s1.encoding, None)
 
         s2 = Setting('tests/resources/minimum.yml')
         self.assertEqual(s2.config_path, 'tests/resources/minimum.yml')
@@ -51,6 +52,29 @@ class TestSetting(TestCase):
         self.assertEqual(s5.config_path, 'https://example.com/resources/minimum.yml')
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
+
+    def test_find_encoding(self):
+        import io
+        import codecs
+
+        old = sys.stdout.encoding
+
+        try:
+            if six.PY2:
+                sys.stdout = codecs.getwriter('sjis')(sys.stdout)
+                sys.stdout.encoding = 'sjis'
+            else:
+                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, 'sjis')
+
+            self.assertEqual(Setting().encoding, 'sjis')
+            self.assertEqual(Setting(encoding='utf-8').encoding, 'utf-8')
+
+        finally:
+            if six.PY2:
+                sys.stdout = codecs.getwriter(old)(sys.stdout)
+                sys.stdout.encoding = old
+            else:
+                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, old)
 
     def test_find_lang(self):
         s = Setting()

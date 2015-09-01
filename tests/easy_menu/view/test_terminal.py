@@ -21,14 +21,6 @@ class TestTerminal(TestCase):
         self.assertEqual(t.host, 'host')
         self.assertEqual(t.user, 'user')
 
-    def test_init_with_output_encoding(self):
-        out = FakeOutput(encoding='sjis')
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), _output=out)
-        self.assertEqual(t.encoding, 'sjis')
-
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), _output=out, encoding='utf-8')
-        self.assertEqual(t.encoding, 'utf-8')
-
     def test_init_error(self):
         self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
         self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))

@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import os
+import sys
 import locale
 import re
 import yaml
@@ -28,7 +29,7 @@ class Setting(CaseClass):
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
-            ('encoding', encoding),
+            ('encoding', self._find_encoding(encoding, sys.stdout)),
             ('lang', self._find_lang(lang)),
             ('cache', {} if cache is None else cache)
         )
@@ -51,6 +52,15 @@ class Setting(CaseClass):
         if not lang:
             lang = locale.getdefaultlocale()[0]
         return lang
+
+    @staticmethod
+    def _find_encoding(encoding, output):
+        if not encoding:
+            if hasattr(output, 'encoding'):
+                encoding = output.encoding
+        if not encoding:
+            encoding = locale.getpreferredencoding()
+        return encoding
 
     @staticmethod
     def _is_url(path):

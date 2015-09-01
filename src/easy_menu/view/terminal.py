@@ -1,7 +1,6 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import sys
-import locale
 
 from easy_menu.util import string_util, term_util
 from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
@@ -37,18 +36,9 @@ class Terminal(object):
         self.page_size = page_size
         self._input = _input
         self._output = _output
-        self.encoding = self._find_encoding(encoding, _output)
+        self.encoding = encoding
         self.lang = lang
         self.i18n = self._find_i18n(lang)
-
-    @staticmethod
-    def _find_encoding(encoding, output):
-        if not encoding:
-            if hasattr(output, 'encoding'):
-                encoding = output.encoding
-        if not encoding:
-            encoding = locale.getpreferredencoding()
-        return encoding
 
     @staticmethod
     def _find_i18n(lang):
