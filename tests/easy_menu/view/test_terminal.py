@@ -2,13 +2,14 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import tempfile
+import io
 
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import InterruptError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput, FakeOutput
+from tests.fake_io import FakeInput
 
 
 class TestTerminal(TestCase):
@@ -388,4 +389,33 @@ class TestTerminal(TestCase):
             (6, '[INFO] Command ended with return code: 0'),
             (6, '[INFO] Command started: echo executing 9'),
             (6, '[INFO] Command ended with return code: 0'),
+        ])
+
+    def test_loop_sjis(self):
+        self.maxDiff = None
+
+        root_menu = {'メインメニュー': [{'メニュー 1': "echo 'あいうえお'"}]}
+
+        _in = FakeInput(''.join(['1yx', '0']))
+
+        # We use a temporary file due to capture the output of subprocess#call.
+        with tempfile.TemporaryFile() as out:
+            t = Terminal(
+                root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP')
+            t.loop()
+
+            with io.open('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as f:
+                expect = f.read().splitlines()
+
+            out.seek(0)
+            actual = out.read().splitlines(0)
+
+        self.assertEqual(len(actual), len(expect))
+        for i in range(len(expect)):
+            self.assertEqual(actual[i].decode('sjis'), expect[i],
+                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
+
+        self.assertEqual(t.executor.logger.buffer, [
+            (6, "[INFO] Command started: echo 'あいうえお'"),
+            (6, "[INFO] Command ended with return code: 0"),
         ])
