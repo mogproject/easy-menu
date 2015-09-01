@@ -1,5 +1,4 @@
 import sys
-import os
 import locale
 
 from easy_menu.util import string_util, term_util
@@ -36,8 +35,8 @@ class Terminal(object):
         self._input = _input
         self._output = _output
         self.encoding = self._find_encoding(encoding, _output)
-        self.lang = self._find_lang(lang)
-        self.i18n = self._find_i18n(self.lang)
+        self.lang = lang
+        self.i18n = self._find_i18n(lang)
 
     @staticmethod
     def _find_encoding(encoding, output):
@@ -47,16 +46,6 @@ class Terminal(object):
         if not encoding:
             encoding = locale.getpreferredencoding()
         return encoding
-
-    @staticmethod
-    def _find_lang(lang):
-        if not lang:
-            # environment LANG is the first priority
-            lang = os.environ.get('LANG')
-            if lang:
-                return lang.lower()
-            return locale.getdefaultlocale()[0].lower()
-        return lang
 
     @staticmethod
     def _find_i18n(lang):

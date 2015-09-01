@@ -1,4 +1,5 @@
 import os
+import locale
 import re
 import yaml
 from urllib2 import urlopen
@@ -15,14 +16,14 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding='utf-8', lang=None, cache=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
             ('encoding', encoding),
-            ('lang', lang),
+            ('lang', self._find_lang(lang)),
             ('cache', {} if cache is None else cache)
         )
 
@@ -35,6 +36,16 @@ class Setting(CaseClass):
             lang=args.get('lang', self.lang),
             cache=args.get('cache', self.cache),
         )
+
+    @staticmethod
+    def _find_lang(lang):
+        if not lang:
+            # environment LANG is the first priority
+            lang = os.environ.get('LANG')
+            if lang:
+                return lang.lower()
+            return locale.getdefaultlocale()[0].lower()
+        return lang
 
     @staticmethod
     def _is_url(path):
@@ -116,7 +127,9 @@ class Setting(CaseClass):
                 # read from file
                 print('Reading file: %s' % path_or_url_or_cmdline)
                 data = open(path_or_url_or_cmdline).read()
-            menu = yaml.load(data.decode(self.encoding))
+
+            # If --encode option is not set, we use utf-8 for parsing YAML file.
+            menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu

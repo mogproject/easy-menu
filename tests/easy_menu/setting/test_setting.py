@@ -27,31 +27,27 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(s1.config_path, None)
         self.assertEqual(s1.work_dir, None)
         self.assertEqual(s1.root_menu, {})
-        self.assertEqual(s1.encoding, 'utf-8')
+        self.assertEqual(s1.encoding, None)
 
         s2 = Setting('tests/resources/minimum.yml')
         self.assertEqual(s2.config_path, 'tests/resources/minimum.yml')
         self.assertEqual(s2.work_dir, 'tests/resources')
         self.assertEqual(s2.root_menu, {})
-        self.assertEqual(s2.encoding, 'utf-8')
 
         s3 = Setting('https://example.com/resources/minimum.yml')
         self.assertEqual(s3.config_path, 'https://example.com/resources/minimum.yml')
         self.assertEqual(s3.work_dir, None)
         self.assertEqual(s3.root_menu, {})
-        self.assertEqual(s3.encoding, 'utf-8')
 
         s4 = Setting('tests/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s4.config_path, 'tests/resources/minimum.yml')
         self.assertEqual(s4.work_dir, '/tmp')
         self.assertEqual(s4.root_menu, {})
-        self.assertEqual(s4.encoding, 'utf-8')
 
         s5 = Setting('https://example.com/resources/minimum.yml', work_dir='/tmp')
         self.assertEqual(s5.config_path, 'https://example.com/resources/minimum.yml')
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
-        self.assertEqual(s5.encoding, 'utf-8')
 
     def test_is_url(self):
         self.assertEqual(Setting()._is_url('http://example.com/foo.yml'), True)
