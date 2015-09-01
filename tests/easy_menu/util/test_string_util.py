@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-import sys
 from easy_menu.util import string_util
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
+from tests.easy_menu.util.universal_import import unittest
 
 
 class TestStringUtil(unittest.TestCase):
+    def test_unicode_width(self):
+        self.assertEqual(string_util.unicode_width(b'abc'), 3)
+        self.assertEqual(string_util.unicode_width('あいう'), 6)
+
+    def test_to_unicode(self):
+        self.assertEqual(string_util.to_unicode(b'abc'), 'abc')
+        self.assertEqual(string_util.to_unicode('あいう'), 'あいう')
+        self.assertEqual(string_util.to_unicode(1.23), '1.23')
+
     def test_edge_just(self):
         self.assertEqual(string_util.edge_just('', '', 0), ' ')
         self.assertEqual(string_util.edge_just('', '', -1), ' ')

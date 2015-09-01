@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-import sys
 import os
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
-
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
+from tests.easy_menu.util.universal_import import unittest
 
 
 class TestSetting(unittest.TestCase):
