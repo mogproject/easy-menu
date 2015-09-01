@@ -5,6 +5,8 @@ class CaseClass(object):
     """
     Implementation like Scala's case class
 
+    This class can order if and only if all the element can order.
+
     Example:
         class Coord(CaseClass):
             def __init__(self, x, y):
@@ -33,16 +35,30 @@ class CaseClass(object):
 
     def __cmp__(self, other):
         if not isinstance(other, self.__class__):
-            # compare with class names
-            return cmp(self.__class__.__name__, other.__class__.__name__)
+            raise TypeError('unorderable types: %s() < %s()' % (self.__class__.__name__, other.__class__.__name__))
 
         for k in self._keys:
             a, b = getattr(self, k), getattr(other, k)
-            if a < b:
-                return -1
-            if a > b:
-                return 1
+            if a is not None or b is not None:
+                if a < b:
+                    return -1
+                if a > b:
+                    return 1
         return 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        for k in self._keys:
+            a, b = getattr(self, k), getattr(other, k)
+            if a is not None or b is not None:
+                if a != b:
+                    return False
+        return True
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join('%s=%r' % (k, getattr(self, k)) for k in self._keys))

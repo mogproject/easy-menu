@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import subprocess
+from easy_menu.util import string_util
 
 
 def execute_command(cmd, work_dir, stdin, stdout, stderr):
@@ -15,6 +16,8 @@ def execute_command(cmd, work_dir, stdin, stdout, stderr):
     :param stderr: standard error
     :return: return code
     """
+    assert string_util.is_unicode(cmd), 'cmd must be unicode string, not %s' % type(cmd).__name__
+
     try:
         ret_code = subprocess.call(
             cmd,
@@ -39,6 +42,8 @@ def capture_command(cmd, work_dir, stdin=sys.stdin):
     :param stdin: standard input
     :return: tuple of return code, stdout data and stderr data
     """
+    assert string_util.is_unicode(cmd), 'cmd must be unicode string, not %s' % type(cmd).__name__
+
     stdout_data, stderr_data = None, None
 
     try:

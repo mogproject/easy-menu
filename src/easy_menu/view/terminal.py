@@ -4,6 +4,7 @@ import sys
 import locale
 
 from easy_menu.util import string_util, term_util
+from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
 from easy_menu.exceptions import InterruptError, EncodeError
 from easy_menu.view import i18n
 
@@ -104,7 +105,7 @@ class Terminal(object):
         ]
 
     def _get_description(self, item):
-        d, c = item.items()[0]
+        d, c = get_single_item(item)
         return self.i18n.MSG_SUB_MENU % d if isinstance(c, list) else d
 
     def get_page(self, title, page_items, parent_title, offset, num_pages):
@@ -126,7 +127,7 @@ class Terminal(object):
         ]
 
         message = self.i18n.MSG_INPUT_NUM % (0, len(page_items))
-        return u'\n'.join(self._get_header(title) + pager_lines + item_lines + quit_lines + self._get_footer(message))
+        return '\n'.join(self._get_header(title) + pager_lines + item_lines + quit_lines + self._get_footer(message))
 
     def get_confirm(self, description):
         """
@@ -139,12 +140,12 @@ class Terminal(object):
         item_lines = [
             self.i18n.MSG_CONFIRM % description
         ]
-        return u'\n'.join(
+        return '\n'.join(
             self._get_header(self.i18n.MSG_CONFIRM_TITLE) + item_lines +
             self._get_footer(self.i18n.MSG_CONFIRM_QUESTION))
 
     def get_before_execute(self, description):
-        return u'\n'.join(self._get_header(self.i18n.MSG_RUN_TITLE % description) + [''])
+        return '\n'.join(self._get_header(self.i18n.MSG_RUN_TITLE % description) + [''])
 
     def get_after_execute(self, return_code):
         result_lines = [
@@ -167,9 +168,14 @@ class Terminal(object):
     # Output
     #
     def _print(self, unicode_text):
+        assert string_util.is_unicode(unicode_text)
         try:
-            self._output.write(unicode_text.encode(self.encoding))
-        except LookupError, e:
+            if hasattr(self._output, 'buffer'):
+                self._output.buffer.write(unicode_text.encode(self.encoding))
+            else:
+                self._output.write(unicode_text.encode(self.encoding))
+            self._output.flush()
+        except LookupError as e:
             raise EncodeError(e)
 
     def _draw(self, unicode_text):
@@ -195,7 +201,7 @@ class Terminal(object):
                 index = offset * self.page_size + int(ch) - 1
                 if index < num_items:
                     d = menu_items[index]
-                    description, command = d.items()[0]
+                    description, command = get_single_item(d)
 
                     # check if it is a sub menu
                     if isinstance(command, list):
@@ -233,11 +239,11 @@ class Terminal(object):
         # run command
         self._draw(self.get_before_execute(description))
         return_code = self.executor.execute(
-            command.encode(self.encoding), stdin=self._input, stdout=self._output, stderr=self._output)
+            command, stdin=self._input, stdout=self._output, stderr=self._output)
 
         if return_code == 130:
             # maybe interrupted
-            self._print(u'\n')
+            self._print('\n')
 
         self._print(self.get_after_execute(return_code))
         self.wait_input_char()  # wait for any input
@@ -247,16 +253,16 @@ class Terminal(object):
         offset = 0  # current page index
 
         while stack:
-            title, items = stack[-1].items()[0]
+            title, items = get_single_item(stack[-1])
             num_pages = self._num_pages(len(items))
-            parent_title = None if len(stack) == 1 else stack[-2].keys()[0]
+            parent_title = None if len(stack) == 1 else get_single_key(stack[-2])
 
             # apply offset
             page_items = items[self.page_size * offset:self.page_size * (offset + 1)]
 
             self._draw(self.get_page(title, page_items, parent_title, offset, num_pages))
 
-            f = self.wait_input_menu(stack[-1].values()[0], offset, num_pages)
+            f = self.wait_input_menu(get_single_value(stack[-1]), offset, num_pages)
             stack, offset = f(stack, offset)
 
         term_util.clear_screen(self._input, self._output)

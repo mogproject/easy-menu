@@ -1,7 +1,9 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import six
+
 from easy_menu.util.case_class import CaseClass
-from tests.easy_menu.util.universal_import import unittest
+from tests.universal import TestCase
 
 
 class Coord(CaseClass):
@@ -9,7 +11,7 @@ class Coord(CaseClass):
         super(Coord, self).__init__(('x', x), ('y', y))
 
 
-class TestCaseClass(unittest.TestCase):
+class TestCaseClass(TestCase):
     def test_init(self):
         a = Coord(123, 45)
         self.assertEqual(a.x, 123)
@@ -31,7 +33,7 @@ class TestCaseClass(unittest.TestCase):
 
         combi = [(i, j) for i in [a, b, c, d, e] for j in [a, b, c, d, e]]
 
-        self.assertEqual(map(lambda x: x[0] == x[1], combi), [
+        self.assertEqual([x == y for x, y in combi], [
             True, True, False, False, False,
             True, True, False, False, False,
             False, False, True, False, False,
@@ -39,7 +41,7 @@ class TestCaseClass(unittest.TestCase):
             False, False, False, False, True,
         ])
 
-        self.assertEqual(map(lambda x: x[0] < x[1], combi), [
+        self.assertEqual([x < y for x, y in combi], [
             False, False, True, True, False,
             False, False, True, True, False,
             False, False, False, True, False,
@@ -51,9 +53,9 @@ class TestCaseClass(unittest.TestCase):
         class AAA:
             pass
 
-        self.assertEqual(Coord(123, 45) < 10, True)
-        self.assertEqual(Coord(123, 45) < 'x', True)
-        self.assertEqual(Coord(123, 45) < AAA(), False)
+        self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < int\(\)$', lambda: Coord(123, 45) < 10)
+        self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < ', lambda: Coord(123, 45) < 'x')
+        self.assertRaisesRegexp(TypeError, '^unorderable types: Coord\(\) < AAA\(\)$', lambda: Coord(123, 45) < AAA())
 
     def test_repr(self):
         self.assertEqual(repr(Coord(123, 45)), 'Coord(x=123, y=45)')
