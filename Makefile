@@ -6,6 +6,9 @@ build:
 install:
 	$(PYTHON) setup.py install
 
+uninstall:
+	$(PYTHON) setup.py uninstall
+
 dev-install:
 	$(PYTHON) setup.py develop
 
@@ -33,4 +36,4 @@ register:
 publish:
 	$(PYTHON) setup.py sdist upload
 
-.PHONY: build install dev_install dev_uninstall pep8 test coverage clean console register publish
+.PHONY: build install uninstall dev_install dev_uninstall pep8 test coverage clean console register publish

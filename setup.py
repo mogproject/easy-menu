@@ -13,9 +13,10 @@ def get_version():
 setup(
     name='easy-menu',
     version=get_version(),
-    description='Super Simple Terminal UI Generator',
+    description='Super Simple Terminal Command Launcher Generator',
     author='mogproject',
     author_email='mogproj@gmail.com',
+    license='Apache 2.0 License',
     url='https://github.com/mogproject/easy-menu',
     install_requires=[
         'pyyaml',
