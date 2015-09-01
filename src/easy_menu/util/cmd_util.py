@@ -5,7 +5,7 @@ import subprocess
 from easy_menu.util import string_util
 
 
-def execute_command(cmd, work_dir, stdin, stdout, stderr):
+def execute_command(cmd, work_dir, stdin, stdout, stderr, encoding='utf-8'):
     """
     Execute external command
 
@@ -20,7 +20,7 @@ def execute_command(cmd, work_dir, stdin, stdout, stderr):
 
     try:
         ret_code = subprocess.call(
-            cmd,
+            cmd.encode(encoding),
             shell=True,
             stdin=stdin,
             stdout=stdout,
@@ -33,7 +33,7 @@ def execute_command(cmd, work_dir, stdin, stdout, stderr):
     return ret_code
 
 
-def capture_command(cmd, work_dir, stdin=sys.stdin):
+def capture_command(cmd, work_dir, stdin=sys.stdin, encoding='utf-8'):
     """
     Execute external command and capture output
 
@@ -48,7 +48,7 @@ def capture_command(cmd, work_dir, stdin=sys.stdin):
 
     try:
         p = subprocess.Popen(
-            cmd,
+            cmd.encode(encoding),
             shell=True,
             stdin=stdin,
             stdout=subprocess.PIPE,

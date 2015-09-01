@@ -133,7 +133,7 @@ class Setting(CaseClass):
                 print('Executing: %s' % path_or_url_or_cmdline)
 
                 # ignore return code and stderr
-                data = cmd_util.capture_command(path_or_url_or_cmdline, self.work_dir)[1]
+                data = cmd_util.capture_command(path_or_url_or_cmdline, self.work_dir, encoding=self.encoding)[1]
             elif self._is_url(path_or_url_or_cmdline):
                 # read from URL
                 print('Reading from URL: %s' % path_or_url_or_cmdline)

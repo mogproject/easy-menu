@@ -229,7 +229,7 @@ class Terminal(object):
         # run command
         self._draw(self.get_before_execute(description))
         return_code = self.executor.execute(
-            command, stdin=self._input, stdout=self._output, stderr=self._output)
+            command, stdin=self._input, stdout=self._output, stderr=self._output, encoding=self.encoding)
 
         if return_code == 130:
             # maybe interrupted

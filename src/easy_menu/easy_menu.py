@@ -16,7 +16,7 @@ def main():
 
     try:
         setting = Setting().parse_args(sys.argv).lookup_config().load_meta().load_config()
-        executor = CommandExecutor(setting.work_dir, SystemLogger())
+        executor = CommandExecutor(setting.work_dir, SystemLogger(setting.encoding))
 
         host = network_util.get_hostname()
         user = network_util.get_username()
