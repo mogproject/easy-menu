@@ -8,6 +8,7 @@ from tests.easy_menu.util.universal_import import unittest
 class TestStringUtil(unittest.TestCase):
     def test_unicode_width(self):
         self.assertEqual(string_util.unicode_width(b'abc'), 3)
+        self.assertEqual(string_util.unicode_width('あいう'.encode('utf-8')), 9)
         self.assertEqual(string_util.unicode_width('あいう'), 6)
 
     def test_to_unicode(self):

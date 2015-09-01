@@ -4,7 +4,9 @@ import os
 import locale
 import re
 import yaml
-from urllib2 import urlopen
+import six
+from six.moves.urllib.request import urlopen
+
 from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
 from easy_menu.util import CaseClass, cmd_util, string_util
@@ -125,9 +127,9 @@ class Setting(CaseClass):
                 print('Reading from URL: %s' % path_or_url_or_cmdline)
                 data = urlopen(path_or_url_or_cmdline).read()
             else:
-                # read from file
+                # read from file as bytes
                 print('Reading file: %s' % path_or_url_or_cmdline)
-                data = open(path_or_url_or_cmdline).read()
+                data = open(path_or_url_or_cmdline, 'rb').read()
 
             # If --encode option is not set, we use utf-8 for parsing YAML file.
             menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))
@@ -177,25 +179,25 @@ class Setting(CaseClass):
             if len(config) != 1:
                 raise ConfigError(self.config_path, 'Menu should have only one item, not %s.' % len(config))
 
-            name, content = config.items()[0]
+            name, content = list(six.iteritems(config))[0]
             t = type(content).__name__
 
             if name == 'include':
                 # content should be a leaf
-                if not isinstance(content, basestring):
+                if not isinstance(content, six.string_types):
                     raise ConfigError(self.config_path, '"include" section must have string content, not %s.' % t)
 
                 return build_config(self._load_data(False, content), True, depth + 1)
             elif name == 'eval':
                 # content should be a leaf
-                if not isinstance(content, basestring):
+                if not isinstance(content, six.string_types):
                     raise ConfigError(self.config_path, '"eval" section must have string content, not %s.' % t)
 
                 return build_config(self._load_data(True, content), True, depth + 1)
             else:
                 if isinstance(content, list):
                     content = [build_config(child, False, depth + 1) for child in content]
-                elif isinstance(content, basestring):
+                elif isinstance(content, six.string_types):
                     if is_root:
                         raise ConfigError(self.config_path, 'Root content must be list, not %s.' % t)
                 else:

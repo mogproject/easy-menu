@@ -25,7 +25,7 @@ def main():
         t.loop()
     except InterruptError:
         pass
-    except EasyMenuError, e:
+    except EasyMenuError as e:
         print(e)
         return 2
     return 0

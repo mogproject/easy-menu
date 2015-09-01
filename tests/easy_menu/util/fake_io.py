@@ -1,11 +1,13 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-from tests.easy_menu.util.universal_import import StringIO
+import six
+
+from easy_menu.util import string_util
 
 
-class FakeInput(StringIO):
+class FakeInput(six.StringIO):
     def __init__(self, buff=None):
-        StringIO.__init__(self, buff)
+        six.StringIO.__init__(self, buff)
 
     def fileno(self):
         return 0
@@ -26,5 +28,5 @@ class FakeOutput(object):
     def flush(self):
         """flush"""
 
-    def read(self):
-        return ''.join(self.buff)
+    def read(self, encoding='utf-8'):
+        return ''.join(string_util.to_unicode(b, encoding) for b in self.buff)

@@ -380,12 +380,12 @@ class TestTerminal(unittest.TestCase):
             self.assertEqual(actual[i], expect[i], 'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
 
         self.assertEqual(t.executor.logger.buffer, [
-            (6, u'[INFO] Command started: echo executing a'),
-            (6, u'[INFO] Command ended with return code: 0'),
-            (6, u'[INFO] Command started: echo executing b'),
-            (6, u'[INFO] Command ended with return code: 0'),
-            (6, u'[INFO] Command started: echo executing 10'),
-            (6, u'[INFO] Command ended with return code: 0'),
-            (6, u'[INFO] Command started: echo executing 9'),
-            (6, u'[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing a'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing b'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing 10'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing 9'),
+            (6, '[INFO] Command ended with return code: 0'),
         ])
