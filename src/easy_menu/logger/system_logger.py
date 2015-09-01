@@ -1,7 +1,9 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import os
 import sys
 import syslog
-from logger import Logger
+from easy_menu.logger.logger import Logger
 
 
 class SystemLogger(Logger):

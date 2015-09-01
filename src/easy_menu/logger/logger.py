@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import syslog
 from abc import ABCMeta, abstractmethod
 from easy_menu.util import CaseClass

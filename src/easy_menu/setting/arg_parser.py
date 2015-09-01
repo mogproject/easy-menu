@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 from optparse import OptionParser
 
 VERSION = 'easy-menu %s' % __import__('easy_menu').__version__

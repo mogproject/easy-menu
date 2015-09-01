@@ -1,9 +1,11 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import sys
 import locale
 
 from easy_menu.util import string_util, term_util
 from easy_menu.exceptions import InterruptError, EncodeError
-import i18n
+from easy_menu.view import i18n
 
 
 class Terminal(object):
@@ -63,23 +65,23 @@ class Terminal(object):
     # Design parts
     #
     def thin_line(self):
-        return u'-' * self.width
+        return '-' * self.width
 
     def thick_line(self):
-        return u'=' * self.width
+        return '=' * self.width
 
     def header_line(self):
         return string_util.edge_just(self.i18n.MSG_HOST % self.host, self.i18n.MSG_USER % self.user, self.width)
 
     @staticmethod
     def title_line(title):
-        return u' ' * 2 + title
+        return ' ' * 2 + title
 
     def menu_line(self):
-        return u'+'.rjust(7, '-').ljust(self.width, '-')
+        return '+'.rjust(7, '-').ljust(self.width, '-')
 
     def pager_line(self, offset, num_pages):
-        left = u'<= [P]' if 0 < offset else '      '
+        left = '<= [P]' if 0 < offset else '      '
         right = '[N] =>' if offset + 1 < num_pages else '      '
         middle = ('Page %d / %d' % (offset + 1, num_pages)).center(self.width - len(left) - len(right))
         return left + middle + right

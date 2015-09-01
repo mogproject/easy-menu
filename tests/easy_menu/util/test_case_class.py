@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import sys
 from easy_menu.util.case_class import CaseClass
 

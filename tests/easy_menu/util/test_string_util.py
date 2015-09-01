@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import division, print_function, absolute_import, unicode_literals
 
 import sys
 from easy_menu.util import string_util
@@ -18,9 +19,9 @@ class TestStringUtil(unittest.TestCase):
         self.assertEqual(string_util.edge_just('abcde', 'fghij', 10), 'abcde fghij')
 
     def test_edge_just_unicode(self):
-        self.assertEqual(string_util.edge_just('', u'', 0), ' ')
-        self.assertEqual(string_util.edge_just('', u'', -1), ' ')
-        self.assertEqual(string_util.edge_just('', u'', 10), '          ')
-        self.assertEqual(string_util.edge_just('', u'あいう', 10), u'    あいう')
-        self.assertEqual(string_util.edge_just(u'あいu', u'えo', 10), u'あいu  えo')
-        self.assertEqual(string_util.edge_just(u'あいう', u'えお', 10), u'あいう えお')
+        self.assertEqual(string_util.edge_just('', '', 0), ' ')
+        self.assertEqual(string_util.edge_just('', '', -1), ' ')
+        self.assertEqual(string_util.edge_just('', '', 10), '          ')
+        self.assertEqual(string_util.edge_just('', 'あいう', 10), '    あいう')
+        self.assertEqual(string_util.edge_just('あいu', 'えo', 10), 'あいu  えo')
+        self.assertEqual(string_util.edge_just('あいう', 'えお', 10), 'あいう えお')

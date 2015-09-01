@@ -1,9 +1,11 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import os
 import locale
 import re
 import yaml
 from urllib2 import urlopen
-import arg_parser
+from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
 from easy_menu.util import CaseClass, cmd_util, string_util
 
