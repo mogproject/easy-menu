@@ -51,7 +51,7 @@ class Terminal(object):
     def _find_i18n(lang):
         if not lang:
             return i18n.messages_en
-        elif lang.startswith('ja'):
+        elif lang.lower().startswith('ja'):
             return i18n.messages_ja
         else:
             return i18n.messages_en

@@ -42,9 +42,8 @@ class Setting(CaseClass):
         if not lang:
             # environment LANG is the first priority
             lang = os.environ.get('LANG')
-            if lang:
-                return lang.lower()
-            return locale.getdefaultlocale()[0].lower()
+        if not lang:
+            lang = locale.getdefaultlocale()[0]
         return lang
 
     @staticmethod

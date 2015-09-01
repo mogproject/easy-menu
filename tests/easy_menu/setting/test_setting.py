@@ -49,6 +49,19 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
 
+    def test_find_lang(self):
+        s = Setting()
+        old = os.environ['LANG']
+
+        del os.environ['LANG']
+        self.assertEqual(s._find_lang('ja_JP'), 'ja_JP')
+        s._find_lang(None).islower()  # return value depends on the system
+
+        os.environ['LANG'] = 'en_US'
+        self.assertEqual(s._find_lang(None), 'en_US')
+
+        os.environ['LANG'] = old
+
     def test_is_url(self):
         self.assertEqual(Setting()._is_url('http://example.com/foo.yml'), True)
         self.assertEqual(Setting()._is_url('https://example.com/foo.yml'), True)
