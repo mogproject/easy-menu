@@ -43,6 +43,7 @@ Dependencies
 
 * Python: 2.6 / 2.7  (Now struggling for 3.x support)
 * pyyaml
+* six
 
 ----------
 Quickstart

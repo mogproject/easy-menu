@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import sys
 import os
 import time
@@ -15,6 +17,21 @@ LAST_GETCH_TIME = 0.0
 LAST_GETCH_CHAR = ''
 
 
+def _wrap_termios(_input, func):
+    assert hasattr(_input, 'fileno'), 'Invalid input device.'
+
+    fd = _input.fileno()
+    old_settings = termios.tcgetattr(fd)
+
+    try:
+        tty.setraw(fd)
+        ret = func()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    return ret
+
+
 def getch(_input=sys.stdin):
     """Wait and get one character from input"""
 
@@ -24,13 +41,7 @@ def getch(_input=sys.stdin):
     if os.name == 'nt':
         ch = msvcrt.getch()
     else:
-        fd = _input.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(fd)
-            ch = _input.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        ch = _wrap_termios(_input, lambda: _input.read(1))
 
     t = time.time()
 

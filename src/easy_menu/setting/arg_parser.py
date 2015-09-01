@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 from optparse import OptionParser
 
 VERSION = 'easy-menu %s' % __import__('easy_menu').__version__
@@ -9,8 +11,13 @@ def __get_parser():
     p = OptionParser(version=VERSION, usage=USAGE)
 
     p.add_option(
-        '--encode', dest='encoding', default='utf-8', type='string', metavar='ENCODING',
+        '--encode', dest='encoding', default=None, type='string', metavar='ENCODING',
         help='set output encoding to ENCODING'
+    )
+
+    p.add_option(
+        '--lang', dest='lang', default=None, type='string', metavar='LANG',
+        help='set language to LANG (in RFC 1766 format)'
     )
 
     p.add_option(

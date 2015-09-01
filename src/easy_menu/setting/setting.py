@@ -1,8 +1,11 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import os
+import locale
 import re
 import yaml
 from urllib2 import urlopen
-import arg_parser
+from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError
 from easy_menu.util import CaseClass, cmd_util, string_util
 
@@ -15,13 +18,14 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding='utf-8', cache=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
             ('encoding', encoding),
+            ('lang', self._find_lang(lang)),
             ('cache', {} if cache is None else cache)
         )
 
@@ -31,8 +35,18 @@ class Setting(CaseClass):
             work_dir=args.get('work_dir', self.work_dir),
             root_menu=args.get('root_menu', self.root_menu),
             encoding=args.get('encoding', self.encoding),
+            lang=args.get('lang', self.lang),
             cache=args.get('cache', self.cache),
         )
+
+    @staticmethod
+    def _find_lang(lang):
+        if not lang:
+            # environment LANG is the first priority
+            lang = os.environ.get('LANG')
+        if not lang:
+            lang = locale.getdefaultlocale()[0]
+        return lang
 
     @staticmethod
     def _is_url(path):
@@ -60,7 +74,7 @@ class Setting(CaseClass):
             arg_parser.parser.print_help()
             arg_parser.parser.exit(2)
 
-        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding)
+        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding, lang=option.lang)
 
     def lookup_config(self):
         if self.config_path is None:
@@ -114,7 +128,9 @@ class Setting(CaseClass):
                 # read from file
                 print('Reading file: %s' % path_or_url_or_cmdline)
                 data = open(path_or_url_or_cmdline).read()
-            menu = yaml.load(data.decode(self.encoding))
+
+            # If --encode option is not set, we use utf-8 for parsing YAML file.
+            menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu

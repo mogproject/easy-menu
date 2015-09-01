@@ -19,6 +19,7 @@ setup(
     url='https://github.com/mogproject/easy-menu',
     install_requires=[
         'pyyaml',
+        'six',
     ],
     tests_require=[
         'unittest2',

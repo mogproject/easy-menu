@@ -1,10 +1,7 @@
-import sys
-from easy_menu.util.case_class import CaseClass
+from __future__ import division, print_function, absolute_import, unicode_literals
 
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
+from easy_menu.util.case_class import CaseClass
+from tests.easy_menu.util.universal_import import unittest
 
 
 class Coord(CaseClass):

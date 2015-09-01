@@ -1,12 +1,14 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import syslog
 from abc import ABCMeta, abstractmethod
+import six
 from easy_menu.util import CaseClass
 
 
+@six.add_metaclass(ABCMeta)
 class Logger(CaseClass):
     """abstract logger class"""
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, ident):
         """

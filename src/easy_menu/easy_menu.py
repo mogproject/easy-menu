@@ -1,10 +1,12 @@
+from __future__ import division, print_function, absolute_import, unicode_literals
+
 import sys
-from view import Terminal
-from controller import CommandExecutor
-from setting.setting import Setting
-from logger import SystemLogger
-from util import network_util
-from exceptions import EasyMenuError, InterruptError
+from easy_menu.view import Terminal
+from easy_menu.controller import CommandExecutor
+from easy_menu.setting.setting import Setting
+from easy_menu.logger import SystemLogger
+from easy_menu.util import network_util
+from easy_menu.exceptions import EasyMenuError, InterruptError
 
 
 def main():
@@ -19,7 +21,7 @@ def main():
         host = network_util.get_hostname()
         user = network_util.get_username()
 
-        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding)
+        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding, lang=setting.lang)
         t.loop()
     except InterruptError:
         pass
