@@ -168,9 +168,13 @@ class Terminal(object):
     # Output
     #
     def _print(self, unicode_text):
+        assert string_util.is_unicode(unicode_text)
         try:
-            self._output.write(unicode_text)
-            # self._output.write(unicode_text.encode(self.encoding))
+            if hasattr(self._output, 'buffer'):
+                self._output.buffer.write(unicode_text.encode(self.encoding))
+            else:
+                self._output.write(unicode_text.encode(self.encoding))
+            self._output.flush()
         except LookupError as e:
             raise EncodeError(e)
 

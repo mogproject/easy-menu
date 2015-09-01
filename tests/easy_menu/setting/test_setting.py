@@ -4,6 +4,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import os
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
 from tests.universal import TestCase
+from tests.fake_io import captured_output
 
 
 class TestSetting(TestCase):
@@ -14,6 +15,12 @@ class TestSetting(TestCase):
             self.assertEqual(cm.exception, expected_code)
         else:
             self.assertEqual(cm.exception.code, expected_code)
+
+    def _with_output(self, func, expect, expect_stdout, expect_stderr):
+        with captured_output() as (out, err):
+            self.assertEqual(func(), expect)
+        self.assertEqual(out.getvalue(), expect_stdout)
+        self.assertEqual(err.getvalue(), expect_stderr)
 
     def _testfile(self, filename):
         return os.path.join(os.path.abspath(os.path.curdir), 'tests/resources', filename)
@@ -94,7 +101,21 @@ class TestSetting(TestCase):
         )
 
     def test_parse_args_error(self):
-        self._assert_system_exit(2, lambda: Setting().parse_args(['easy-menu', 'a', 'b']))
+        with captured_output() as (out, err):
+            self._assert_system_exit(2, lambda: Setting().parse_args(['easy-menu', 'a', 'b']))
+        self.assertEqual(out.getvalue(), '\n'.join([
+            'Usage: setup.py [options...] [<config_path> | <config_url>]',
+            '',
+            'Options:',
+            "  --version             show program's version number and exit",
+            '  -h, --help            show this help message and exit',
+            '  --encode=ENCODING     set output encoding to ENCODING',
+            '  --lang=LANG           set language to LANG (in RFC 1766 format)',
+            '  -d DIR, --work-dir=DIR',
+            '                        set working directory to DIR',
+            ''
+        ]))
+        self.assertEqual(err.getvalue(), '')
 
     def test_lookup_config(self):
         self.assertEqual(Setting('foo.yml').lookup_config(), Setting('foo.yml'))
@@ -117,12 +138,13 @@ class TestSetting(TestCase):
         self.assertEqual(Setting(work_dir='/').lookup_config(), Setting(work_dir='/'))
 
     def test_load_data(self):
-        self.assertEqual(
-            Setting()._load_data(False, 'tests/resources/minimum.yml'),
-            {'': []}
+        self._with_output(
+            lambda: Setting()._load_data(False, 'tests/resources/minimum.yml'),
+            {'': []}, 'Reading file: tests/resources/minimum.yml\n', ''
         )
-        self.assertEqual(
-            Setting()._load_data(False, 'tests/resources/nested.yml'),
+
+        self._with_output(
+            lambda: Setting()._load_data(False, 'tests/resources/nested.yml'),
             {'Main Menu': [
                 {'Sub Menu 1': [
                     {'Menu 1': 'echo 1'},
@@ -134,31 +156,41 @@ class TestSetting(TestCase):
                         {'Menu 4': 'echo 4'}
                     ]}, {'Menu 5': 'echo 5'}
                 ]},
-                {'Menu 6': 'echo 6'}]}
+                {'Menu 6': 'echo 6'}]},
+            'Reading file: tests/resources/nested.yml\n',
+            ''
         )
-        self.assertEqual(
-            Setting()._load_data(False, 'tests/resources/with_meta.yml'),
+        self._with_output(
+            lambda: Setting()._load_data(False, 'tests/resources/with_meta.yml'),
             {'meta': {'work_dir': '/tmp'},
              'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
-                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
+                           {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]},
+            'Reading file: tests/resources/with_meta.yml\n',
+            ''
         )
-        self.assertEqual(
-            Setting(cache={(False, 'https://example.com/foo.yml'): {
+        self._with_output(
+            lambda: Setting(cache={(False, 'https://example.com/foo.yml'): {
                 'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
             })._load_data(False, 'https://example.com/foo.yml'),
-            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]},
+            '',
+            ''
         )
-        self.assertEqual(
-            Setting()._load_data(True, """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
-            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+        self._with_output(
+            lambda: Setting()._load_data(True, """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
+            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]},
+            """Executing: echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'\n""",
+            ''
         )
-        self.assertEqual(
-            Setting(work_dir=os.path.abspath('tests/resources'))._load_data(False, 'minimum.yml'),
-            {'': []}
+        self._with_output(
+            lambda: Setting(work_dir=os.path.abspath('tests/resources'))._load_data(False, 'minimum.yml'),
+            {'': []},
+            'Reading file: %s\n' % self._testfile('minimum.yml'),
+            ''
         )
         # SJIS
-        self.assertEqual(
-            Setting(encoding='sjis')._load_data(False, 'tests/resources/sjis_ja.yml'),
+        self._with_output(
+            lambda: Setting(encoding='sjis')._load_data(False, 'tests/resources/sjis_ja.yml'),
             {
                 "メインメニュー": [
                     {"サービス稼動状態確認": "echo 'サービス稼動状態確認'"},
@@ -175,81 +207,117 @@ class TestSetting(TestCase):
                     ]},
                     {"サーバ再起動": "echo 'サーバ再起動'"}
                 ]
-            }
+            },
+            'Reading file: tests/resources/sjis_ja.yml\n',
+            ''
         )
 
     def test_load_data_error(self):
-        def f(filename, err, msg):
-            with self.assertRaises(err) as cm:
-                Setting()._load_data(False, os.path.join('tests/resources', filename))
-            self.assertEqual(cm.exception.args[0], msg)
+        self.assertRaisesRegexp(
+            SettingError,
+            '^Not found configuration file[.]$',
+            lambda: Setting()._load_data(False, None)
+        )
 
-        with self.assertRaises(SettingError) as cm:
-            Setting()._load_data(False, None)
-        self.assertEqual(cm.exception.args[0], 'Not found configuration file.')
+        inputs = [
+            ('error_not_exist.yml', 'Failed to open[.]'),
+            ('error_parser.yml', 'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
+                                 '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      \^'),
+            ('error_scanner.yml',
+             'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "'
+             '\n    \^\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    \^')
+        ]
 
-        f('error_not_exist.yml', ConfigError,
-          'Configuration error: tests/resources/error_not_exist.yml: Failed to open.')
-        f('error_parser.yml', ConfigError,
-          'Configuration error: tests/resources/error_parser.yml: '
-          'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
-          '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      ^')
-        f('error_scanner.yml', ConfigError,
-          'Configuration error: tests/resources/error_scanner.yml: '
-          'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "\n    ^'
-          '\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    ^')
+        for filename, expect in inputs:
+            with captured_output() as (out, err):
+                self.assertRaisesRegexp(
+                    ConfigError,
+                    '^Configuration error: %s: %s$' % (self._testfile(filename), expect),
+                    lambda: Setting(config_path=self._testfile(filename)).load_config()
+                )
+                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % self._testfile(filename))
+                self.assertEqual(err.getvalue(), '')
 
     def test_load_meta(self):
-        self.assertEqual(
-            Setting(self._testfile('minimum.yml')).load_meta().work_dir,
-            os.path.join(os.path.abspath(os.path.curdir), 'tests/resources')
+        self._with_output(
+            lambda: Setting(self._testfile('minimum.yml')).load_meta().work_dir,
+            os.path.join(os.path.abspath(os.path.curdir), 'tests/resources'),
+            'Reading file: %s\n' % self._testfile('minimum.yml'),
+            ''
         )
-        self.assertEqual(
-            Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
+        self._with_output(
+            lambda: Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
                 'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
             }).load_meta().work_dir,
-            None
+            None,
+            '',
+            ''
         )
-        self.assertEqual(
-            Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
+        self._with_output(
+            lambda: Setting('https://example.com/foo.yml', cache={(False, 'https://example.com/foo.yml'): {
                 'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}],
                 'meta': {'work_dir': '/tmp'}}
             }).load_meta().work_dir,
-            '/tmp'
+            '/tmp',
+            '',
+            ''
         )
-        self.assertEqual(Setting(self._testfile('with_meta.yml')).load_meta().work_dir, '/tmp')
-        self.assertEqual(Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp').load_meta().work_dir, '/tmp')
+        self._with_output(
+            lambda: Setting(self._testfile('with_meta.yml')).load_meta().work_dir,
+            '/tmp',
+            'Reading file: %s\n' % self._testfile('with_meta.yml'),
+            ''
+        )
+        self._with_output(
+            lambda: Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp').load_meta().work_dir,
+            '/tmp',
+            'Reading file: %s\n' % self._testfile('with_meta.yml'),
+            ''
+        )
 
     def test_load_config(self):
-        s = Setting(config_path=self._testfile('minimum.yml')).load_config()
-        self.assertEqual(s.root_menu, {'': []})
-
-        s = Setting(config_path=self._testfile('flat.yml')).load_config()
-        self.assertEqual(s.root_menu, {
-            'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
-                          {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]})
-
-        s = Setting(config_path=self._testfile('with_dynamic.yml')).load_config()
-        self.assertEqual(s.root_menu, {
-            'Main Menu': [{'Menu 1': 'echo 1'},
-                          {'Sub Menu': [{'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}]}]})
+        self._with_output(
+            lambda: Setting(config_path=self._testfile('minimum.yml')).load_config().root_menu,
+            {'': []},
+            'Reading file: %s\n' % self._testfile('minimum.yml'),
+            ''
+        )
+        self._with_output(
+            lambda: Setting(config_path=self._testfile('flat.yml')).load_config().root_menu,
+            {
+                'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
+                              {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]},
+            'Reading file: %s/tests/resources/flat.yml\n' % os.path.abspath(os.path.curdir),
+            ''
+        )
+        self._with_output(
+            lambda: Setting(config_path=self._testfile('with_dynamic.yml')).load_config().root_menu,
+            {'Main Menu': [{'Menu 1': 'echo 1'}, {'Sub Menu': [{'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}]}]},
+            'Reading file: %s/tests/resources/with_dynamic.yml\n' % os.path.abspath(os.path.curdir) +
+            """Executing: echo '{"Sub Menu": [{"Menu 2": "echo 2"}, {"Menu 3": "echo 3"}]}'\n""",
+            ''
+        )
 
     def test_load_config_error(self):
-        def prefixed(filename):
-            return 'Configuration error: %s: ' % self._testfile(filename)
+        inputs = [
+            ('error_command_only.yml', 'Root content must be list, not str[.]'),
+            ('error_include_as_submenu.yml', '"include" section must have string content, not list[.]'),
+            ('error_dynamic_as_submenu.yml', '"eval" section must have string content, not list[.]'),
+            ('error_include_loop.yml', 'Nesting level too deep[.]'),
+            ('error_key_only1.yml', 'Content must be string or list, not NoneType[.]'),
+            ('error_key_only2.yml', 'Content must be string or list, not NoneType[.]'),
+            ('error_meta_only.yml', 'Menu should have only one item, not 0[.]'),
+            ('error_multiple_items.yml', 'Menu should have only one item, not 2[.]'),
+            ('error_not_dict1.yml', 'Menu must be dict, not list[.]'),
+            ('error_not_dict2.yml', 'Menu must be dict, not int[.]'),
+        ]
 
-        def f(filename, msg):
-            with self.assertRaises(ConfigError) as cm:
-                Setting(config_path=self._testfile(filename)).load_config()
-            self.assertEqual(cm.exception.args[0], prefixed(filename) + msg)
-
-        f('error_command_only.yml', 'Root content must be list, not str.')
-        f('error_include_as_submenu.yml', '"include" section must have string content, not list.')
-        f('error_dynamic_as_submenu.yml', '"eval" section must have string content, not list.')
-        f('error_include_loop.yml', 'Nesting level too deep.')
-        f('error_key_only1.yml', 'Content must be string or list, not NoneType.')
-        f('error_key_only2.yml', 'Content must be string or list, not NoneType.')
-        f('error_meta_only.yml', 'Menu should have only one item, not 0.')
-        f('error_multiple_items.yml', 'Menu should have only one item, not 2.')
-        f('error_not_dict1.yml', 'Menu must be dict, not list.')
-        f('error_not_dict2.yml', 'Menu must be dict, not int.')
+        for filename, expect in inputs:
+            with captured_output() as (out, err):
+                self.assertRaisesRegexp(
+                    ConfigError,
+                    '^Configuration error: %s: %s$' % (self._testfile(filename), expect),
+                    lambda: Setting(config_path=self._testfile(filename)).load_config()
+                )
+                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % self._testfile(filename))
+                self.assertEqual(err.getvalue(), '')

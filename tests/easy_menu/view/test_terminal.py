@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import tempfile
+
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import InterruptError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.easy_menu.util.fake_io import FakeInput, FakeOutput
+from tests.fake_io import FakeInput, FakeOutput
 
 
 class TestTerminal(TestCase):
@@ -20,8 +22,7 @@ class TestTerminal(TestCase):
         self.assertEqual(t.user, 'user')
 
     def test_init_with_output_encoding(self):
-        out = FakeOutput()
-        out.encoding = 'sjis'
+        out = FakeOutput(encoding='sjis')
         t = Terminal({'': []}, 'host', 'user', self.get_exec(), _output=out)
         self.assertEqual(t.encoding, 'sjis')
 
@@ -368,17 +369,23 @@ class TestTerminal(TestCase):
         }
 
         _in = FakeInput(''.join(['1n', '1N', '1\n', '1yx', '2Yx', '3n', '1yx', 'p', '9yx', '0', '-0']))
-        _out = FakeOutput()
-        t = Terminal(
-            root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=_out, encoding='utf-8', lang='en_US')
-        t.loop()
 
-        with open('tests/resources/expect/terminal_test_loop.txt') as f:
-            expect = f.read().splitlines()
-        actual = _out.read().splitlines()
+        # We use a temporary file due to capture the output of subprocess#call.
+        with tempfile.TemporaryFile() as out:
+            t = Terminal(
+                root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US')
+            t.loop()
+
+            with open('tests/resources/expect/terminal_test_loop.txt') as f:
+                expect = f.read().splitlines()
+
+            out.seek(0)
+            actual = out.read().splitlines(0)
+
         self.assertEqual(len(actual), len(expect))
         for i in range(len(expect)):
-            self.assertEqual(actual[i], expect[i], 'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
+            self.assertEqual(actual[i].decode('utf-8'), expect[i],
+                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
 
         self.assertEqual(t.executor.logger.buffer, [
             (6, '[INFO] Command started: echo executing a'),

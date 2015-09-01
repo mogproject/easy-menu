@@ -42,6 +42,8 @@ def capture_command(cmd, work_dir, stdin=sys.stdin):
     :param stdin: standard input
     :return: tuple of return code, stdout data and stderr data
     """
+    assert string_util.is_unicode(cmd), 'cmd must be unicode string, not %s' % type(cmd).__name__
+
     stdout_data, stderr_data = None, None
 
     try:

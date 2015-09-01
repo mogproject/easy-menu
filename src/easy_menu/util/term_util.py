@@ -21,13 +21,17 @@ def _wrap_termios(_input, func):
     assert hasattr(_input, 'fileno'), 'Invalid input device.'
 
     fd = _input.fileno()
-    old_settings = termios.tcgetattr(fd)
-
+    old_settings = None
     try:
-        tty.setraw(fd)
+        try:
+            old_settings = termios.tcgetattr(fd)
+            tty.setraw(fd)
+        except termios.error:
+            pass
         ret = func()
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        if old_settings:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
     return ret
 
