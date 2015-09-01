@@ -19,7 +19,7 @@ def main():
         host = network_util.get_hostname()
         user = network_util.get_username()
 
-        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding)
+        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding, lang=setting.lang)
         t.loop()
     except InterruptError:
         pass

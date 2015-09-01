@@ -14,6 +14,11 @@ def __get_parser():
     )
 
     p.add_option(
+        '--lang', dest='lang', default=None, type='string', metavar='LANG',
+        help='set language to LANG (in RFC 1766 format)'
+    )
+
+    p.add_option(
         '-d', '--work-dir', dest='work_dir', default=None, type='string', metavar='DIR',
         help='set working directory to DIR'
     )

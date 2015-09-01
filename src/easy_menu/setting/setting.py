@@ -15,13 +15,14 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding='utf-8', cache=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding='utf-8', lang=None, cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
             ('encoding', encoding),
+            ('lang', lang),
             ('cache', {} if cache is None else cache)
         )
 
@@ -31,6 +32,7 @@ class Setting(CaseClass):
             work_dir=args.get('work_dir', self.work_dir),
             root_menu=args.get('root_menu', self.root_menu),
             encoding=args.get('encoding', self.encoding),
+            lang=args.get('lang', self.lang),
             cache=args.get('cache', self.cache),
         )
 
@@ -60,7 +62,7 @@ class Setting(CaseClass):
             arg_parser.parser.print_help()
             arg_parser.parser.exit(2)
 
-        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding)
+        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding, lang=option.lang)
 
     def lookup_config(self):
         if self.config_path is None:

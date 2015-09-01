@@ -1,13 +1,15 @@
 import sys
+import os
+import locale
 
 from easy_menu.util import string_util, term_util
 from easy_menu.exceptions import InterruptError, EncodeError
-from i18n import *
+import i18n
 
 
 class Terminal(object):
     def __init__(self, root_menu, host, user, executor, width=80, page_size=9, _input=sys.stdin, _output=sys.stdout,
-                 encoding=None):
+                 encoding=None, lang=None):
         """
         :param root_menu: dict of root menu
         :param host: host name string
@@ -18,6 +20,7 @@ class Terminal(object):
         :param _input:
         :param _output:
         :param encoding:
+        :param lang: language setting
         :return:
         """
         assert 0 < width, 'width must be positive'
@@ -33,6 +36,8 @@ class Terminal(object):
         self._input = _input
         self._output = _output
         self.encoding = self._find_encoding(encoding, _output)
+        self.lang = self._find_lang(lang)
+        self.i18n = self._find_i18n(self.lang)
 
     @staticmethod
     def _find_encoding(encoding, output):
@@ -42,6 +47,25 @@ class Terminal(object):
         if not encoding:
             encoding = locale.getpreferredencoding()
         return encoding
+
+    @staticmethod
+    def _find_lang(lang):
+        if not lang:
+            # environment LANG is the first priority
+            lang = os.environ.get('LANG')
+            if lang:
+                return lang.lower()
+            return locale.getdefaultlocale()[0].lower()
+        return lang
+
+    @staticmethod
+    def _find_i18n(lang):
+        if not lang:
+            return i18n.messages_en
+        elif lang.startswith('ja'):
+            return i18n.messages_ja
+        else:
+            return i18n.messages_en
 
     def _num_pages(self, num_items):
         return max(1, (num_items + self.page_size - 1) // self.page_size)
@@ -56,7 +80,7 @@ class Terminal(object):
         return u'=' * self.width
 
     def header_line(self):
-        return string_util.edge_just(MSG_HOST % self.host, MSG_USER % self.user, self.width)
+        return string_util.edge_just(self.i18n.MSG_HOST % self.host, self.i18n.MSG_USER % self.user, self.width)
 
     @staticmethod
     def title_line(title):
@@ -88,27 +112,29 @@ class Terminal(object):
             message,
         ]
 
-    @staticmethod
-    def _get_description(item):
+    def _get_description(self, item):
         d, c = item.items()[0]
-        return MSG_SUB_MENU % d if isinstance(c, list) else d
+        return self.i18n.MSG_SUB_MENU % d if isinstance(c, list) else d
 
     def get_page(self, title, page_items, parent_title, offset, num_pages):
         """Make menu page string."""
+
+        assert len(page_items) <= self.page_size, 'Number of page items must less or equal than page size.'
 
         pager_lines = [] if num_pages <= 1 else [
             self.pager_line(offset, num_pages),
             self.thin_line(),
         ]
 
-        item_lines = [MSG_ITEM % (i + 1, self._get_description(item)) for i, item in enumerate(page_items)]
+        item_lines = [self.i18n.MSG_ITEM % (i + 1, self._get_description(item)) for i, item in enumerate(page_items)]
 
         quit_lines = [
             self.menu_line(),
-            MSG_ITEM % (0, MSG_QUIT if parent_title is None else MSG_RETURN % parent_title),
+            self.i18n.MSG_ITEM % (
+                0, self.i18n.MSG_QUIT if parent_title is None else self.i18n.MSG_RETURN % parent_title),
         ]
 
-        message = MSG_INPUT_NUM % (0, len(page_items))
+        message = self.i18n.MSG_INPUT_NUM % (0, len(page_items))
         return u'\n'.join(self._get_header(title) + pager_lines + item_lines + quit_lines + self._get_footer(message))
 
     def get_confirm(self, description):
@@ -120,19 +146,21 @@ class Terminal(object):
         """
 
         item_lines = [
-            MSG_CONFIRM % description
+            self.i18n.MSG_CONFIRM % description
         ]
-        return u'\n'.join(self._get_header(MSG_CONFIRM_TITLE) + item_lines + self._get_footer(MSG_CONFIRM_QUESTION))
+        return u'\n'.join(
+            self._get_header(self.i18n.MSG_CONFIRM_TITLE) + item_lines +
+            self._get_footer(self.i18n.MSG_CONFIRM_QUESTION))
 
     def get_before_execute(self, description):
-        return u'\n'.join(self._get_header(MSG_RUN_TITLE % description) + [''])
+        return u'\n'.join(self._get_header(self.i18n.MSG_RUN_TITLE % description) + [''])
 
     def get_after_execute(self, return_code):
         result_lines = [
             self.thin_line(),
             'Return code: %d' % return_code,
         ]
-        return '\n'.join(result_lines + self._get_footer(MSG_INPUT_ANY))
+        return '\n'.join(result_lines + self._get_footer(self.i18n.MSG_INPUT_ANY))
 
     #
     # Wait for input
