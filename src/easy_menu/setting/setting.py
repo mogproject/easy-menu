@@ -129,7 +129,8 @@ class Setting(CaseClass):
             else:
                 # read from file as bytes
                 print('Reading file: %s' % path_or_url_or_cmdline)
-                data = open(path_or_url_or_cmdline, 'rb').read()
+                with open(path_or_url_or_cmdline, 'rb') as f:
+                    data = f.read()
 
             # If --encode option is not set, we use utf-8 for parsing YAML file.
             menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))

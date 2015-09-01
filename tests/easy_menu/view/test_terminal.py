@@ -4,12 +4,12 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import InterruptError
+from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.easy_menu.util.universal_import import unittest
 from tests.easy_menu.util.fake_io import FakeInput, FakeOutput
 
 
-class TestTerminal(unittest.TestCase):
+class TestTerminal(TestCase):
     def get_exec(self):
         return CommandExecutor(logger=MockLogger())
 
@@ -373,7 +373,8 @@ class TestTerminal(unittest.TestCase):
             root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=_out, encoding='utf-8', lang='en_US')
         t.loop()
 
-        expect = open('tests/resources/expect/terminal_test_loop.txt').read().splitlines()
+        with open('tests/resources/expect/terminal_test_loop.txt') as f:
+            expect = f.read().splitlines()
         actual = _out.read().splitlines()
         self.assertEqual(len(actual), len(expect))
         for i in range(len(expect)):

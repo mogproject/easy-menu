@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import six
 
 from easy_menu.util.case_class import CaseClass
-from tests.easy_menu.util.universal_import import unittest
+from tests.universal import TestCase
 
 
 class Coord(CaseClass):
@@ -11,7 +11,7 @@ class Coord(CaseClass):
         super(Coord, self).__init__(('x', x), ('y', y))
 
 
-class TestCaseClass(unittest.TestCase):
+class TestCaseClass(TestCase):
     def test_init(self):
         a = Coord(123, 45)
         self.assertEqual(a.x, 123)

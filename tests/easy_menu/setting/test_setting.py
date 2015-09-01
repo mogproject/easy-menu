@@ -3,10 +3,10 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import os
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
-from tests.easy_menu.util.universal_import import unittest
+from tests.universal import TestCase
 
 
-class TestSetting(unittest.TestCase):
+class TestSetting(TestCase):
     def _assert_system_exit(self, expected_code, f):
         with self.assertRaises(SystemExit) as cm:
             f()
