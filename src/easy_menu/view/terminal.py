@@ -98,10 +98,12 @@ class Terminal(object):
         d, c = get_single_item(item)
         return self.i18n.MSG_SUB_MENU % d if isinstance(c, list) else d
 
-    def get_page(self, title, page_items, parent_title, offset, num_pages):
+    def get_page(self, titles, page_items, offset, num_pages):
         """Make menu page string."""
 
         assert len(page_items) <= self.page_size, 'Number of page items must less or equal than page size.'
+
+        title = string_util.unicode_right(' > '.join(titles), self.width - 4)
 
         pager_lines = [] if num_pages <= 1 else [
             self.pager_line(offset, num_pages),
@@ -113,7 +115,7 @@ class Terminal(object):
         quit_lines = [
             self.menu_line(),
             self.i18n.MSG_ITEM % (
-                0, self.i18n.MSG_QUIT if parent_title is None else self.i18n.MSG_RETURN % parent_title),
+                0, self.i18n.MSG_QUIT if len(titles) == 1 else self.i18n.MSG_RETURN % titles[-2]),
         ]
 
         message = self.i18n.MSG_INPUT_NUM % (0, len(page_items))
@@ -243,14 +245,14 @@ class Terminal(object):
         offset = 0  # current page index
 
         while stack:
-            title, items = get_single_item(stack[-1])
+            titles = [get_single_key(d) for d in stack]
+            items = get_single_value(stack[-1])
             num_pages = self._num_pages(len(items))
-            parent_title = None if len(stack) == 1 else get_single_key(stack[-2])
 
             # apply offset
             page_items = items[self.page_size * offset:self.page_size * (offset + 1)]
 
-            self._draw(self.get_page(title, page_items, parent_title, offset, num_pages))
+            self._draw(self.get_page(titles, page_items, offset, num_pages))
 
             f = self.wait_input_menu(get_single_value(stack[-1]), offset, num_pages)
             stack, offset = f(stack, offset)

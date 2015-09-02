@@ -33,7 +33,7 @@ class TestTerminal(TestCase):
         self.maxDiff = None
 
         t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C')
-        self.assertEqual(t.get_page('title', [], None, 0, 1), '\n'.join([
+        self.assertEqual(t.get_page(['title'], [], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
             '  title',
@@ -44,14 +44,14 @@ class TestTerminal(TestCase):
             'Press menu number (0-0): '
         ]))
 
-        self.assertEqual(t.get_page('title', [
+        self.assertEqual(t.get_page(['Main Menu', 'title'], [
             {'menu a': 'command a'},
             {'menu b': 'command b'},
             {'menu c': 'command c'},
-        ], 'Main Menu', 0, 1), '\n'.join([
+        ], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
-            '  title',
+            '  Main Menu > title',
             '--------------------------------------------------------------------------------',
             '  [1] | menu a',
             '  [2] | menu b',
@@ -62,7 +62,7 @@ class TestTerminal(TestCase):
             'Press menu number (0-3): '
         ]))
 
-        self.assertEqual(t.get_page('title', [
+        self.assertEqual(t.get_page(['title'], [
             {'menu a': 'command a'},
             {'menu b': 'command b'},
             {'menu c': 'command c'},
@@ -72,7 +72,7 @@ class TestTerminal(TestCase):
             {'menu g': 'command g'},
             {'menu h': 'command h'},
             {'menu i': 'command i'},
-        ], None, 0, 100), '\n'.join([
+        ], 0, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
             '  title',
@@ -94,7 +94,7 @@ class TestTerminal(TestCase):
             'Press menu number (0-9): '
         ]))
 
-        self.assertEqual(t.get_page('title', [
+        self.assertEqual(t.get_page(['title'], [
             {'menu a': 'command a'},
             {'menu b': 'command b'},
             {'menu c': 'command c'},
@@ -104,7 +104,7 @@ class TestTerminal(TestCase):
             {'menu g': 'command g'},
             {'menu h': 'command h'},
             {'menu i': 'command i'},
-        ], None, 8, 100), '\n'.join([
+        ], 8, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
             '  title',
@@ -126,9 +126,9 @@ class TestTerminal(TestCase):
             'Press menu number (0-9): '
         ]))
 
-        self.assertEqual(t.get_page('title', [
+        self.assertEqual(t.get_page(['title'], [
             {'menu a': 'command a'},
-        ], None, 99, 100), '\n'.join([
+        ], 99, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
             '  title',
@@ -146,7 +146,7 @@ class TestTerminal(TestCase):
         self.maxDiff = None
 
         t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP')
-        self.assertEqual(t.get_page('タイトル', [], None, 0, 1), '\n'.join([
+        self.assertEqual(t.get_page(['タイトル'], [], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
             '  タイトル',
@@ -157,14 +157,14 @@ class TestTerminal(TestCase):
             '番号を入力してください (0-0): '
         ]))
 
-        self.assertEqual(t.get_page('タイトル', [
+        self.assertEqual(t.get_page(['メインメニュー', 'タイトル'], [
             {'メニュー a': 'コマンド a'},
             {'メニュー b': 'コマンド b'},
             {'メニュー c': 'コマンド c'},
-        ], 'メインメニュー', 0, 1), '\n'.join([
+        ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
-            '  タイトル',
+            '  メインメニュー > タイトル',
             '--------------------------------------------------------------------------------',
             '  [1] | メニュー a',
             '  [2] | メニュー b',
@@ -175,7 +175,28 @@ class TestTerminal(TestCase):
             '番号を入力してください (0-3): '
         ]))
 
-        self.assertEqual(t.get_page('タイトル', [
+        self.assertEqual(t.get_page([
+            'メインメニュー', 'タイトル1', 'タイトル2', 'タイトル3', 'タイトル4',
+            'タイトル5', 'タイトル6', 'タイトル7', 'タイトル8',
+        ], [
+            {'メニュー a': 'コマンド a'},
+            {'メニュー b': 'コマンド b'},
+            {'メニュー c': 'コマンド c'},
+        ], 0, 1), '\n'.join([
+            'ホスト名: ホスト                                              実行ユーザ: ユーザ',
+            '================================================================================',
+            '  ル2 > タイトル3 > タイトル4 > タイトル5 > タイトル6 > タイトル7 > タイトル8',
+            '--------------------------------------------------------------------------------',
+            '  [1] | メニュー a',
+            '  [2] | メニュー b',
+            '  [3] | メニュー c',
+            '------+-------------------------------------------------------------------------',
+            '  [0] | タイトル7 に戻る',
+            '================================================================================',
+            '番号を入力してください (0-3): '
+        ]))
+
+        self.assertEqual(t.get_page(['タイトル'], [
             {'メニュー a': 'コマンド a'},
             {'メニュー b': 'コマンド b'},
             {'メニュー c': 'コマンド c'},
@@ -185,7 +206,7 @@ class TestTerminal(TestCase):
             {'メニュー g': 'コマンド g'},
             {'メニュー h': 'コマンド h'},
             {'メニュー i': 'コマンド i'},
-        ], None, 0, 100), '\n'.join([
+        ], 0, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
             '  タイトル',
@@ -207,7 +228,7 @@ class TestTerminal(TestCase):
             '番号を入力してください (0-9): '
         ]))
 
-        self.assertEqual(t.get_page('タイトル', [
+        self.assertEqual(t.get_page(['タイトル'], [
             {'メニュー a': 'コマンド a'},
             {'メニュー b': 'コマンド b'},
             {'メニュー c': 'コマンド c'},
@@ -217,7 +238,7 @@ class TestTerminal(TestCase):
             {'メニュー g': 'コマンド g'},
             {'メニュー h': 'コマンド h'},
             {'メニュー i': 'コマンド i'},
-        ], None, 8, 100), '\n'.join([
+        ], 8, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
             '  タイトル',
@@ -239,9 +260,9 @@ class TestTerminal(TestCase):
             '番号を入力してください (0-9): '
         ]))
 
-        self.assertEqual(t.get_page('タイトル', [
+        self.assertEqual(t.get_page(['タイトル'], [
             {'メニュー a': 'コマンド a'},
-        ], None, 99, 100), '\n'.join([
+        ], 99, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
             '  タイトル',
