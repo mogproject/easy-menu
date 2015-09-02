@@ -46,3 +46,27 @@ def to_unicode(s, encoding=None, errors='strict'):
 def edge_just(left, right, width, fillchar=' '):
     padding = fillchar * max(1, width - unicode_width(left + right))
     return left + padding + right
+
+
+def unicode_left(s, width):
+    """Cut unicode string from left to fit a given width."""
+    i = 0
+    j = 0
+    for ch in s:
+        j += __unicode_width_mapping[east_asian_width(ch)]
+        if width < j:
+            break
+        i += 1
+    return s[:i]
+
+
+def unicode_right(s, width):
+    """Cut unicode string from right to fit a given width."""
+    i = len(s)
+    j = 0
+    for ch in reversed(s):
+        j += __unicode_width_mapping[east_asian_width(ch)]
+        if width < j:
+            break
+        i -= 1
+    return s[i:]
