@@ -7,7 +7,7 @@ install:
 	$(PYTHON) setup.py install
 
 uninstall:
-	$(PYTHON) setup.py uninstall
+	pip uninstall easy-menu
 
 dev-install:
 	$(PYTHON) setup.py develop
