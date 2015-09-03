@@ -2,7 +2,11 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import os
 import sys
-import syslog
+try:
+    import syslog
+    SYSLOG_AVAILABLE = True
+except ImportError:
+    SYSLOG_AVAILABLE = False
 from easy_menu.logger.logger import Logger
 
 
@@ -12,6 +16,7 @@ class SystemLogger(Logger):
         super(SystemLogger, self).__init__('SystemLogger[%s]' % self.name)
 
     def _log(self, priority, message):
-        syslog.openlog(self.name, syslog.LOG_PID)
-        syslog.syslog(priority, message)
-        syslog.closelog()
+        if SYSLOG_AVAILABLE:
+            syslog.openlog(self.name, syslog.LOG_PID)
+            syslog.syslog(priority, message)
+            syslog.closelog()
