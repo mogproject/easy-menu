@@ -152,7 +152,8 @@ You can change default name of the configuration file by setting the ``EASY_MENU
 Audit Logging
 -------------
 
-Anytime you execute the command, the result (return code) will be recorded to the system log in your operating system.
+Anytime you execute the command, the result (return code) will be recorded to the syslog facility in your operating system.
+This feature is not available on Windows OS.
 
 Example::
 
