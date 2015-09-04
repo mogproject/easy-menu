@@ -21,11 +21,12 @@ def main():
         host = network_util.get_hostname()
         user = network_util.get_username()
 
-        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding, lang=setting.lang)
+        t = Terminal(setting.root_menu, host, user, executor, encoding=setting.encoding, lang=setting.lang,
+                     width=setting.width)
         t.loop()
     except InterruptError:
         pass
-    except EasyMenuError as e:
-        print(e)
+    except (EasyMenuError, AssertionError) as e:
+        print('%s: %s' % (e.__class__.__name__, e))
         return 2
     return 0

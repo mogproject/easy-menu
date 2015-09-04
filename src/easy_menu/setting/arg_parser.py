@@ -21,6 +21,11 @@ def __get_parser():
     )
 
     p.add_option(
+        '--width', dest='width', default=None, type='int', metavar='WIDTH',
+        help='set window width to WIDTH'
+    )
+
+    p.add_option(
         '-d', '--work-dir', dest='work_dir', default=None, type='string', metavar='DIR',
         help='set working directory to DIR'
     )

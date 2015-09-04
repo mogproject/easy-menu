@@ -23,7 +23,8 @@ class Setting(CaseClass):
     Manages all settings.
     """
 
-    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, cache=None):
+    def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, width=None,
+                 cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
@@ -31,6 +32,7 @@ class Setting(CaseClass):
             ('root_menu', {} if root_menu is None else root_menu),
             ('encoding', self._find_encoding(encoding, sys.stdout)),
             ('lang', self._find_lang(lang)),
+            ('width', width),
             ('cache', {} if cache is None else cache)
         )
 
@@ -41,6 +43,7 @@ class Setting(CaseClass):
             root_menu=args.get('root_menu', self.root_menu),
             encoding=args.get('encoding', self.encoding),
             lang=args.get('lang', self.lang),
+            width=args.get('width', self.width),
             cache=args.get('cache', self.cache),
         )
 
@@ -88,7 +91,8 @@ class Setting(CaseClass):
             arg_parser.parser.print_help()
             arg_parser.parser.exit(2)
 
-        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding, lang=option.lang)
+        return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding, lang=option.lang,
+                         width=option.width)
 
     def lookup_config(self):
         if self.config_path is None:
