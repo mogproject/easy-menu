@@ -7,6 +7,12 @@ if sys.version_info < (2, 7):
 else:
     import unittest
 
+# mock
+if sys.version_info < (3, 3):
+    import mock
+else:
+    from unittest import mock
+
 
 class TestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):

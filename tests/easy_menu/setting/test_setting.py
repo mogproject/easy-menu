@@ -4,8 +4,9 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import sys
 import os
 import six
+
 from easy_menu.setting.setting import Setting, ConfigError, SettingError
-from tests.universal import TestCase
+from tests.universal import TestCase, mock
 from tests.fake_io import captured_output
 
 
@@ -234,6 +235,18 @@ class TestSetting(TestCase):
                 ]
             },
             'Reading file: tests/resources/sjis_ja.yml\n',
+            ''
+        )
+
+    @mock.patch('easy_menu.setting.setting.urlopen')
+    def test_load_data_http(self, urlopen_mock):
+        # create a mock
+        urlopen_mock.return_value.read.return_value = b'{"title":[{"a":"x"},{"b":"y"}]}'
+
+        self._with_output(
+            lambda: Setting()._load_data(False, 'http://localhost/xxx.yml'),
+            {'title': [{'a': 'x'}, {'b': 'y'}]},
+            'Reading from URL: http://localhost/xxx.yml\n',
             ''
         )
 
