@@ -135,6 +135,7 @@ class TestSetting(TestCase):
             '  -h, --help            show this help message and exit',
             '  --encode=ENCODING     set output encoding to ENCODING',
             '  --lang=LANG           set language to LANG (in RFC 1766 format)',
+            '  --width=WIDTH         set window width to WIDTH',
             '  -d DIR, --work-dir=DIR',
             '                        set working directory to DIR',
             ''

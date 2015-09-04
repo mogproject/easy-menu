@@ -32,7 +32,7 @@ class TestTerminal(TestCase):
     def test_get_page(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C')
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
         self.assertEqual(t.get_page(['title'], [], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -145,7 +145,7 @@ class TestTerminal(TestCase):
     def test_get_page_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP')
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
         self.assertEqual(t.get_page(['タイトル'], [], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -279,7 +279,7 @@ class TestTerminal(TestCase):
     def test_get_confirm(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C')
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
         self.assertEqual(t.get_confirm('description'), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -293,7 +293,7 @@ class TestTerminal(TestCase):
     def test_get_confirm_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP')
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
         self.assertEqual(t.get_confirm('メニュー 1'), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -307,7 +307,7 @@ class TestTerminal(TestCase):
     def test_get_before_execute(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C')
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
         self.assertEqual(t.get_before_execute('description'), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -319,7 +319,7 @@ class TestTerminal(TestCase):
     def test_get_before_execute_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP')
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
         self.assertEqual(t.get_before_execute('メニュー 1'), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -331,7 +331,7 @@ class TestTerminal(TestCase):
     def test_get_before_after(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C')
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
         self.assertEqual(t.get_after_execute(123), '\n'.join([
             '--------------------------------------------------------------------------------',
             'Return code: 123',
@@ -342,7 +342,7 @@ class TestTerminal(TestCase):
     def test_get_before_after_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP')
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
         self.assertEqual(t.get_after_execute(123), '\n'.join([
             '--------------------------------------------------------------------------------',
             'Return code: 123',
@@ -387,7 +387,8 @@ class TestTerminal(TestCase):
         # We use a temporary file due to capture the output of subprocess#call.
         with tempfile.TemporaryFile() as out:
             t = Terminal(
-                root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US')
+                root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US',
+                width=80)
             t.loop()
 
             with open('tests/resources/expect/terminal_test_loop.txt') as f:
@@ -422,7 +423,8 @@ class TestTerminal(TestCase):
         # We use a temporary file due to capture the output of subprocess#call.
         with tempfile.TemporaryFile() as out:
             t = Terminal(
-                root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP')
+                root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP',
+                width=80)
             t.loop()
 
             with io.open('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as f:

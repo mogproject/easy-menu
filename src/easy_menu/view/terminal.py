@@ -7,10 +7,13 @@ from easy_menu.util.collection_util import get_single_item, get_single_key, get_
 from easy_menu.exceptions import InterruptError, EncodeError
 from easy_menu.view import i18n
 
+DEFAULT_WINDOW_WIDTH = 78
+DEFAULT_PAGE_SIZE = 9
+
 
 class Terminal(object):
-    def __init__(self, root_menu, host, user, executor, width=80, page_size=9, _input=sys.stdin, _output=sys.stdout,
-                 encoding=None, lang=None):
+    def __init__(self, root_menu, host, user, executor, width=None, page_size=None, _input=sys.stdin,
+                 _output=sys.stdout, encoding=None, lang=None):
         """
         :param root_menu: dict of root menu
         :param host: host name string
@@ -24,21 +27,21 @@ class Terminal(object):
         :param lang: language setting
         :return:
         """
-        assert 0 < width, 'width must be positive'
-        assert 0 < page_size <= 9, 'page_size must be positive and one digit'
-
         # fields
         self.root_menu = root_menu
         self.host = host
         self.user = user
         self.executor = executor
-        self.width = width
-        self.page_size = page_size
+        self.width = DEFAULT_WINDOW_WIDTH if width is None else width
+        self.page_size = DEFAULT_PAGE_SIZE if page_size is None else page_size
         self._input = _input
         self._output = _output
         self.encoding = encoding
         self.lang = lang
         self.i18n = self._find_i18n(lang)
+
+        assert 40 <= self.width, 'width must be equal or more than 40'
+        assert 0 < self.page_size <= 9, 'page_size must be positive and one digit'
 
     @staticmethod
     def _find_i18n(lang):
