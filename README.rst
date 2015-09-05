@@ -164,7 +164,7 @@ Example::
 Meta Variables
 --------------
 
-You can overwrite options by writing ``meta`` variables to the root configuration file.
+You can overwrite options by writing ``meta`` variables in the root configuration file.
 
 +-------------------------+---------------------------------------+
 | Option                  | Description                           |
