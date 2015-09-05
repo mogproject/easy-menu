@@ -41,7 +41,7 @@ class Terminal(object):
         self.i18n = self._find_i18n(lang)
 
         if self.width < 40:
-            raise SettingError('width must be equal or more than 40: width=%s' % self.width)
+            raise SettingError('width must be equal or larger than 40: width=%s' % self.width)
         if not 0 < self.page_size <= 9:
             raise SettingError('page_size must be positive and one digit: page_size=%s' % self.page_size)
 
