@@ -21,4 +21,4 @@ class ConfigError(EasyMenuError):
     """Configuration error."""
 
     def __init__(self, path, msg=''):
-        EasyMenuError.__init__(self, 'Configuration error: %s: %s' % (path, msg))
+        EasyMenuError.__init__(self, '%s: %s' % (path, msg))

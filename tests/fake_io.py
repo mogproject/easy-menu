@@ -22,6 +22,9 @@ class FakeOutput(object):
         self.buff = []
         self.encoding = encoding
 
+    def isatty(self):
+        return False
+
     def fileno(self):
         return 1
 

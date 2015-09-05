@@ -272,7 +272,7 @@ class TestSetting(TestCase):
             with captured_output() as (out, err):
                 self.assertRaisesRegexp(
                     ConfigError,
-                    '^Configuration error: %s: %s$' % (path, expect),
+                    '^%s: %s$' % (path, expect),
                     lambda: Setting(config_path=path).load_config()
                 )
                 self.assertEqual(out.getvalue(), 'Reading file: %s\n' % path)
@@ -396,7 +396,7 @@ class TestSetting(TestCase):
             with captured_output() as (out, err):
                 self.assertRaisesRegexp(
                     ConfigError,
-                    '^Configuration error: %s: %s$' % (path, expect),
+                    '^%s: %s$' % (path, expect),
                     lambda: Setting(config_path=path).load_config()
                 )
                 self.assertEqual(out.getvalue(), 'Reading file: %s\n' % path)

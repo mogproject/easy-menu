@@ -166,13 +166,10 @@ class Terminal(object):
     #
     def _print(self, unicode_text):
         assert string_util.is_unicode(unicode_text), 'Text must be unicode: %s' % unicode_text
+
         try:
-            if hasattr(self._output, 'buffer'):
-                self._output.buffer.write(unicode_text.encode(self.encoding))
-            else:
-                self._output.write(unicode_text.encode(self.encoding))
-            self._output.flush()
-        except (LookupError, UnicodeError) as e:
+            term_util.universal_print(self._output, unicode_text, self.encoding)
+        except (LookupError, UnicodeError):
             raise EncodingError('Failed to print menu: lang=%s, encoding=%s' % (self.lang, self.encoding))
 
     def _draw(self, unicode_text):

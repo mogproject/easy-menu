@@ -25,6 +25,7 @@ setup(
     tests_require=[
         'unittest2',
         'mock',
+        'jinja2 == 2.6',
     ],
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),

@@ -379,7 +379,7 @@ class TestTerminal(TestCase):
         root_menu = {
             'Main menu': [
                 {'Menu a': 'echo executing a'},
-                {'Menu b': 'echo executing b'},
+                {'Menu b': 'echo executing b && exit 130'},
                 {'Sub Menu 1': [
                     {'Menu 1': 'echo executing 1'},
                     {'Menu 2': 'echo executing 2'},
@@ -418,8 +418,8 @@ class TestTerminal(TestCase):
         self.assertEqual(t.executor.logger.buffer, [
             (6, '[INFO] Command started: echo executing a'),
             (6, '[INFO] Command ended with return code: 0'),
-            (6, '[INFO] Command started: echo executing b'),
-            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing b && exit 130'),
+            (6, '[INFO] Command ended with return code: 130'),
             (6, '[INFO] Command started: echo executing 10'),
             (6, '[INFO] Command ended with return code: 0'),
             (6, '[INFO] Command started: echo executing 9'),
