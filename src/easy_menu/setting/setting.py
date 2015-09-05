@@ -30,7 +30,7 @@ class Setting(CaseClass):
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
-            ('encoding', self._find_encoding(encoding, sys.stdout)),
+            ('encoding', self._find_encoding(encoding, stdout)),
             ('lang', self._find_lang(lang)),
             ('width', width),
             ('stdin', stdin or sys.stdin),

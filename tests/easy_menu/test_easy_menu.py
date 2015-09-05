@@ -28,7 +28,7 @@ class TestTerminal(TestCase):
 
         ml = MockLogger()
         mock_logger.return_value = ml
-        _in = FakeInput(''.join(['1yx', '2yx', '31yx0', '41yx0', '.0']))
+        _in = FakeInput(''.join(['1yx', '2yx', '31yx0', '41yx00', '.0']))
 
         with self.with_argv(['easy-menu', 'tests/resources/integration_1.yml', '--lang', 'us']):
             host = network_util.get_hostname()
