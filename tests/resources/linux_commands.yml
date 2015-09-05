@@ -3,3 +3,4 @@
   - pwd: pwd
   - ls: ls
   - ls -l: ls -l
+  - sleep 10: sleep 10

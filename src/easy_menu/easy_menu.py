@@ -14,8 +14,9 @@ def main(stdin=None, stdout=None, stderr=None):
     Main function
     """
 
+    base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr)
+
     try:
-        base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr)
         setting = base_setting.parse_args(sys.argv).lookup_config().load_meta().load_config()
         executor = CommandExecutor(setting.work_dir, SystemLogger())
 
@@ -35,6 +36,6 @@ def main(stdin=None, stdout=None, stderr=None):
     except KeyboardInterrupt:
         pass
     except EasyMenuError as e:
-        print('%s: %s' % (e.__class__.__name__, e))
+        base_setting.stdout.write('%s: %s\n' % (e.__class__.__name__, e))
         return 2
     return 0

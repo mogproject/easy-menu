@@ -8,8 +8,7 @@ from easy_menu import easy_menu
 from easy_menu.util import network_util, string_util
 from tests.universal import TestCase, mock
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput, captured_output
-from tests.util.assert_util import assert_output
+from tests.fake_io import FakeInput
 
 
 class TestTerminal(TestCase):
@@ -35,10 +34,9 @@ class TestTerminal(TestCase):
             host = network_util.get_hostname()
             user = network_util.get_username()
 
-            with assert_output(self, 'tests/resources/expect/integration_test.txt.j2', {
+            with self.withAssertOutputFile('tests/resources/expect/integration_test.txt.j2', {
                 'base_dir': os.path.abspath(os.path.curdir),
-                'header': string_util.edge_just('Host: ' + host, 'User: ' + user, 78),
-                'null': '',
+                'header': string_util.edge_just('Host: ' + host, 'User: ' + user, 78)
             }) as out:
                 self.assertEqual(easy_menu.main(_in, out), 0)
 
@@ -60,12 +58,12 @@ class TestTerminal(TestCase):
 
         path = os.path.abspath('tests/resources/error/error_not_exist.yml')
         with self.with_argv(['easy-menu', path]):
-            with captured_output() as (out, err):
-                self.assertEqual(easy_menu.main(), 2)
-                self.assertEqual(out.getvalue(), '\n'.join([
-                    'Reading file: %s' % path,
-                    'ConfigError: %s: Failed to open.' % path,
-                    ''
-                ]))
-                self.assertEqual(err.getvalue(), '')
+            expect_stdout = '\n'.join([
+                'Reading file: %s' % path,
+                'ConfigError: %s: Failed to open.' % path,
+                ''
+            ])
+            with self.withAssertOutput(expect_stdout, '') as (stdout, stderr):
+                self.assertEqual(easy_menu.main(stdout=stdout, stderr=stderr), 2)
+
         self.assertEqual(ml.buffer, [])

@@ -9,7 +9,7 @@ from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import SettingError, EncodingError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput, captured_output
+from tests.fake_io import FakeInput
 
 
 class TestTerminal(TestCase):
@@ -33,14 +33,12 @@ class TestTerminal(TestCase):
     def test_print_error(self):
         t = Terminal({'': []}, 'hose', 'user', self.get_exec(), encoding='ascii', lang='ja')
 
-        with captured_output() as (out, err):
+        with self.withAssertOutput('', '') as (out, err):
             self.assertRaisesRegexp(
                 EncodingError,
                 '^Failed to print menu: lang=ja, encoding=ascii$',
                 lambda: t._print('\n'.join(t._get_header('Header')))
             )
-            self.assertEqual(out.getvalue(), '')
-            self.assertEqual(err.getvalue(), '')
 
     def test_get_page(self):
         self.maxDiff = None
@@ -398,22 +396,11 @@ class TestTerminal(TestCase):
         _in = FakeInput(''.join(['1n', '1N', '1\n', '1yx', '2Yx', '3n', '1yx', 'p', '9yx', '0', '-0']))
 
         # We use a temporary file due to capture the output of subprocess#call.
-        with tempfile.TemporaryFile() as out:
+        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop.txt') as out:
             t = Terminal(
                 root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US',
                 width=80)
             t.loop()
-
-            with open('tests/resources/expect/terminal_test_loop.txt') as f:
-                expect = f.read().splitlines()
-
-            out.seek(0)
-            actual = out.read().splitlines(0)
-
-        self.assertEqual(len(actual), len(expect))
-        for i in range(len(expect)):
-            self.assertEqual(actual[i].decode('utf-8'), expect[i],
-                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
 
         self.assertEqual(t.executor.logger.buffer, [
             (6, '[INFO] Command started: echo executing a'),
@@ -434,23 +421,11 @@ class TestTerminal(TestCase):
         _in = FakeInput(''.join(['1yx', '0']))
 
         # We use a temporary file due to capture the output of subprocess#call.
-        with tempfile.TemporaryFile() as out:
+        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as out:
             t = Terminal(
                 root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP',
                 width=80)
             t.loop()
-
-            with io.open('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as f:
-                expect = f.read().splitlines()
-
-            out.seek(0)
-            actual = out.read().splitlines(0)
-
-        self.assertEqual(len(actual), len(expect))
-        for i in range(len(expect)):
-            self.assertEqual(actual[i].decode('sjis'), expect[i],
-                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
-
         self.assertEqual(t.executor.logger.buffer, [
             (6, "[INFO] Command started: echo 'あいうえお'"),
             (6, "[INFO] Command ended with return code: 0"),
