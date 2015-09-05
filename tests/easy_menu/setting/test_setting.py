@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-import sys
 import os
 import six
 
@@ -52,24 +51,15 @@ class TestSetting(TestCase):
         import io
         import codecs
 
-        old = sys.stdout.encoding
+        if six.PY2:
+            out = codecs.getwriter('sjis')
+            out.encoding = 'sjis'
+        else:
+            out = io.TextIOWrapper(six.StringIO(), 'sjis')
 
-        try:
-            if six.PY2:
-                sys.stdout = codecs.getwriter('sjis')(sys.stdout)
-                sys.stdout.encoding = 'sjis'
-            else:
-                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, 'sjis')
-
-            self.assertEqual(Setting().encoding, 'sjis')
-            self.assertEqual(Setting(encoding='utf-8').encoding, 'utf-8')
-
-        finally:
-            if six.PY2:
-                sys.stdout = codecs.getwriter(old)(sys.stdout)
-                sys.stdout.encoding = old
-            else:
-                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, old)
+        self.assertEqual(Setting()._find_encoding(None, out), 'sjis')
+        self.assertEqual(Setting(stdout=out).encoding, 'sjis')
+        self.assertEqual(Setting(encoding='utf-8', stdout=out).encoding, 'utf-8')
 
     def test_find_lang(self):
         s = Setting()
