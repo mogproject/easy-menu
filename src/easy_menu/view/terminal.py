@@ -4,7 +4,7 @@ import sys
 
 from easy_menu.util import string_util, term_util
 from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
-from easy_menu.exceptions import InterruptError, EncodeError
+from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
 
 DEFAULT_WINDOW_WIDTH = 78
@@ -40,8 +40,10 @@ class Terminal(object):
         self.lang = lang
         self.i18n = self._find_i18n(lang)
 
-        assert 40 <= self.width, 'width must be equal or more than 40'
-        assert 0 < self.page_size <= 9, 'page_size must be positive and one digit'
+        if self.width < 40:
+            raise SettingError('width must be equal or more than 40: width=%s' % self.width)
+        if not 0 < self.page_size <= 9:
+            raise SettingError('page_size must be positive and one digit: page_size=%s' % self.page_size)
 
     @staticmethod
     def _find_i18n(lang):
@@ -156,22 +158,19 @@ class Terminal(object):
         ch = term_util.getch(self._input)
         if ch in ['\x03', '\x04']:
             # pressed C-c or C-d
-            raise InterruptError()
+            raise KeyboardInterrupt
         return ch
 
     #
     # Output
     #
     def _print(self, unicode_text):
-        assert string_util.is_unicode(unicode_text)
+        assert string_util.is_unicode(unicode_text), 'Text must be unicode: %s' % unicode_text
+
         try:
-            if hasattr(self._output, 'buffer'):
-                self._output.buffer.write(unicode_text.encode(self.encoding))
-            else:
-                self._output.write(unicode_text.encode(self.encoding))
-            self._output.flush()
-        except LookupError as e:
-            raise EncodeError(e)
+            term_util.universal_print(self._output, unicode_text, self.encoding)
+        except (LookupError, UnicodeError):
+            raise EncodingError('Failed to print menu: lang=%s, encoding=%s' % (self.lang, self.encoding))
 
     def _draw(self, unicode_text):
         term_util.clear_screen(self._input, self._output)

@@ -9,8 +9,8 @@ import six
 from six.moves.urllib.request import urlopen
 
 from easy_menu.setting import arg_parser
-from easy_menu.exceptions import SettingError, ConfigError
-from easy_menu.util import CaseClass, cmd_util, string_util
+from easy_menu.exceptions import SettingError, ConfigError, EncodingError
+from easy_menu.util import CaseClass, cmd_util, string_util, term_util
 from easy_menu.util.collection_util import get_single_item
 
 
@@ -24,7 +24,7 @@ class Setting(CaseClass):
     """
 
     def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, width=None,
-                 cache=None):
+                 stdin=None, stdout=None, stderr=None, cache=None):
         is_url = self._is_url(config_path)
         super(Setting, self).__init__(
             ('config_path', config_path),
@@ -33,6 +33,9 @@ class Setting(CaseClass):
             ('encoding', self._find_encoding(encoding, sys.stdout)),
             ('lang', self._find_lang(lang)),
             ('width', width),
+            ('stdin', stdin or sys.stdin),
+            ('stdout', stdout or sys.stdout),
+            ('stderr', stderr or sys.stderr),
             ('cache', {} if cache is None else cache)
         )
 
@@ -44,6 +47,9 @@ class Setting(CaseClass):
             encoding=args.get('encoding', self.encoding),
             lang=args.get('lang', self.lang),
             width=args.get('width', self.width),
+            stdin=args.get('stdin', self.stdin),
+            stdout=args.get('stdout', self.stdout),
+            stderr=args.get('stderr', self.stderr),
             cache=args.get('cache', self.cache),
         )
 
@@ -134,27 +140,30 @@ class Setting(CaseClass):
         try:
             if is_command:
                 # execute command
-                print('Executing: %s' % path_or_url_or_cmdline)
+                term_util.universal_print(self.stdout, 'Executing: %s\n' % path_or_url_or_cmdline, self.encoding)
 
                 # ignore return code and stderr
                 data = cmd_util.capture_command(path_or_url_or_cmdline, self.work_dir, encoding=self.encoding)[1]
             elif self._is_url(path_or_url_or_cmdline):
                 # read from URL
-                print('Reading from URL: %s' % path_or_url_or_cmdline)
+                term_util.universal_print(self.stdout, 'Reading from URL: %s\n' % path_or_url_or_cmdline, self.encoding)
                 data = urlopen(path_or_url_or_cmdline).read()
             else:
                 # read from file as bytes
-                print('Reading file: %s' % path_or_url_or_cmdline)
+                term_util.universal_print(self.stdout, 'Reading file: %s\n' % path_or_url_or_cmdline, self.encoding)
                 with open(path_or_url_or_cmdline, 'rb') as f:
                     data = f.read()
 
             # If --encode option is not set, we use utf-8 for parsing YAML file.
-            menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))
+            encoding = self.encoding or 'utf-8'
+            menu = yaml.load(data.decode(encoding))
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu
         except IOError:
             raise ConfigError(path_or_url_or_cmdline, 'Failed to open.')
+        except UnicodeDecodeError:
+            raise EncodingError('Failed to decode with %s: %s' % (encoding, path_or_url_or_cmdline))
         except yaml.YAMLError as e:
             raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % e)
         return menu

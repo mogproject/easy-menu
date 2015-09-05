@@ -1,0 +1,6 @@
+---
+Main Menu:
+  - Menu 1: exit 1
+  - Menu 2: exit 2
+  - include: integration_2.yml
+  - eval: "echo '{\"Dynamic Menu\": [{\"Menu 4\": \"exit 4\"}]}'"

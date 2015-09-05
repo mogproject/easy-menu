@@ -5,15 +5,8 @@ class EasyMenuError(Exception):
     """Base class of application specific exceptions"""
 
 
-class EncodeError(EasyMenuError):
+class EncodingError(EasyMenuError):
     """Encode error."""
-
-    def __init__(self, msg=''):
-        EasyMenuError.__init__(self, 'Encode error: %s' % msg)
-
-
-class InterruptError(EasyMenuError):
-    """Interruption error."""
 
 
 class SettingError(EasyMenuError):
@@ -24,4 +17,4 @@ class ConfigError(EasyMenuError):
     """Configuration error."""
 
     def __init__(self, path, msg=''):
-        EasyMenuError.__init__(self, 'Configuration error: %s: %s' % (path, msg))
+        EasyMenuError.__init__(self, '%s: %s' % (path, msg))

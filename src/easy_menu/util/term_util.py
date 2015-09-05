@@ -13,6 +13,8 @@ else:
     import termios
     import tty
 
+from easy_menu.util import string_util
+
 LAST_GETCH_TIME = 0.0
 LAST_GETCH_CHAR = ''
 
@@ -63,8 +65,27 @@ def getch(_input=sys.stdin):
 def clear_screen(_input=sys.stdin, _output=sys.stdout):
     """Clear terminal screen."""
 
-    if not _input.isatty():
+    if not _output.isatty():
         return
 
     cmd = 'cls' if os.name == 'nt' else 'clear'
     subprocess.call(cmd, shell=True, stdin=_input, stdout=_output, stderr=_output)
+
+
+def universal_print(output, str_or_bytes, encoding='utf-8'):
+    """Print unicode or bytes universally"""
+
+    if string_util.is_unicode(str_or_bytes):
+        bs = str_or_bytes.encode(encoding)
+    else:
+        bs = str_or_bytes
+
+    if hasattr(output, 'buffer'):
+        output.buffer.write(bs)
+    else:
+        try:
+            output.write(bs)
+        except TypeError:
+            output.write(str_or_bytes)
+
+    output.flush()

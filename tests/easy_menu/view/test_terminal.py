@@ -6,7 +6,7 @@ import io
 
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
-from easy_menu.exceptions import InterruptError
+from easy_menu.exceptions import SettingError, EncodingError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
 from tests.fake_io import FakeInput
@@ -23,11 +23,22 @@ class TestTerminal(TestCase):
         self.assertEqual(t.user, 'user')
 
     def test_init_error(self):
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=0))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=-1))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=10))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 39))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=0))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=-1))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=10))
+
+    def test_print_error(self):
+        t = Terminal({'': []}, 'hose', 'user', self.get_exec(), encoding='ascii', lang='ja')
+
+        with self.withAssertOutput('', '') as (out, err):
+            self.assertRaisesRegexp(
+                EncodingError,
+                '^Failed to print menu: lang=ja, encoding=ascii$',
+                lambda: t._print('\n'.join(t._get_header('Header')))
+            )
 
     def test_get_page(self):
         self.maxDiff = None
@@ -356,9 +367,9 @@ class TestTerminal(TestCase):
         self.assertEqual(t.wait_input_char(), 'x')
         self.assertEqual(t.wait_input_char(), 'y')
         self.assertEqual(t.wait_input_char(), 'z')
-        self.assertRaises(InterruptError, t.wait_input_char)
+        self.assertRaises(KeyboardInterrupt, t.wait_input_char)
         self.assertEqual(t.wait_input_char(), '\n')
-        self.assertRaises(InterruptError, t.wait_input_char)
+        self.assertRaises(KeyboardInterrupt, t.wait_input_char)
 
     def test_loop(self):
         self.maxDiff = None
@@ -366,7 +377,7 @@ class TestTerminal(TestCase):
         root_menu = {
             'Main menu': [
                 {'Menu a': 'echo executing a'},
-                {'Menu b': 'echo executing b'},
+                {'Menu b': 'echo executing b && exit 130'},
                 {'Sub Menu 1': [
                     {'Menu 1': 'echo executing 1'},
                     {'Menu 2': 'echo executing 2'},
@@ -385,28 +396,17 @@ class TestTerminal(TestCase):
         _in = FakeInput(''.join(['1n', '1N', '1\n', '1yx', '2Yx', '3n', '1yx', 'p', '9yx', '0', '-0']))
 
         # We use a temporary file due to capture the output of subprocess#call.
-        with tempfile.TemporaryFile() as out:
+        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop.txt') as out:
             t = Terminal(
                 root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US',
                 width=80)
             t.loop()
 
-            with open('tests/resources/expect/terminal_test_loop.txt') as f:
-                expect = f.read().splitlines()
-
-            out.seek(0)
-            actual = out.read().splitlines(0)
-
-        self.assertEqual(len(actual), len(expect))
-        for i in range(len(expect)):
-            self.assertEqual(actual[i].decode('utf-8'), expect[i],
-                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
-
         self.assertEqual(t.executor.logger.buffer, [
             (6, '[INFO] Command started: echo executing a'),
             (6, '[INFO] Command ended with return code: 0'),
-            (6, '[INFO] Command started: echo executing b'),
-            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo executing b && exit 130'),
+            (6, '[INFO] Command ended with return code: 130'),
             (6, '[INFO] Command started: echo executing 10'),
             (6, '[INFO] Command ended with return code: 0'),
             (6, '[INFO] Command started: echo executing 9'),
@@ -421,23 +421,11 @@ class TestTerminal(TestCase):
         _in = FakeInput(''.join(['1yx', '0']))
 
         # We use a temporary file due to capture the output of subprocess#call.
-        with tempfile.TemporaryFile() as out:
+        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as out:
             t = Terminal(
                 root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP',
                 width=80)
             t.loop()
-
-            with io.open('tests/resources/expect/terminal_test_loop_sjis.txt', encoding='sjis') as f:
-                expect = f.read().splitlines()
-
-            out.seek(0)
-            actual = out.read().splitlines(0)
-
-        self.assertEqual(len(actual), len(expect))
-        for i in range(len(expect)):
-            self.assertEqual(actual[i].decode('sjis'), expect[i],
-                             'i=%d, actual=%r,expect=%r' % (i, actual[i], expect[i]))
-
         self.assertEqual(t.executor.logger.buffer, [
             (6, "[INFO] Command started: echo 'あいうえお'"),
             (6, "[INFO] Command ended with return code: 0"),

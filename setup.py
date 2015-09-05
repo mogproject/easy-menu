@@ -24,6 +24,8 @@ setup(
     ],
     tests_require=[
         'unittest2',
+        'mock',
+        'jinja2 == 2.6',  # specify library version to support Python 3.2
     ],
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),
