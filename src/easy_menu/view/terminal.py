@@ -4,7 +4,7 @@ import sys
 
 from easy_menu.util import string_util, term_util
 from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
-from easy_menu.exceptions import InterruptError, EncodingError, SettingError
+from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
 
 DEFAULT_WINDOW_WIDTH = 78
@@ -158,7 +158,7 @@ class Terminal(object):
         ch = term_util.getch(self._input)
         if ch in ['\x03', '\x04']:
             # pressed C-c or C-d
-            raise InterruptError()
+            raise KeyboardInterrupt
         return ch
 
     #

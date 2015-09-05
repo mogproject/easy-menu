@@ -9,10 +9,6 @@ class EncodingError(EasyMenuError):
     """Encode error."""
 
 
-class InterruptError(EasyMenuError):
-    """Interruption error."""
-
-
 class SettingError(EasyMenuError):
     """Setting error."""
 

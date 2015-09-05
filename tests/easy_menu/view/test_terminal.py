@@ -6,7 +6,7 @@ import io
 
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
-from easy_menu.exceptions import InterruptError, SettingError, EncodingError
+from easy_menu.exceptions import SettingError, EncodingError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
 from tests.fake_io import FakeInput, captured_output
@@ -369,9 +369,9 @@ class TestTerminal(TestCase):
         self.assertEqual(t.wait_input_char(), 'x')
         self.assertEqual(t.wait_input_char(), 'y')
         self.assertEqual(t.wait_input_char(), 'z')
-        self.assertRaises(InterruptError, t.wait_input_char)
+        self.assertRaises(KeyboardInterrupt, t.wait_input_char)
         self.assertEqual(t.wait_input_char(), '\n')
-        self.assertRaises(InterruptError, t.wait_input_char)
+        self.assertRaises(KeyboardInterrupt, t.wait_input_char)
 
     def test_loop(self):
         self.maxDiff = None
