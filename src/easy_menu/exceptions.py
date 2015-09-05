@@ -5,11 +5,8 @@ class EasyMenuError(Exception):
     """Base class of application specific exceptions"""
 
 
-class EncodeError(EasyMenuError):
+class EncodingError(EasyMenuError):
     """Encode error."""
-
-    def __init__(self, msg=''):
-        EasyMenuError.__init__(self, 'Encode error: %s' % msg)
 
 
 class InterruptError(EasyMenuError):

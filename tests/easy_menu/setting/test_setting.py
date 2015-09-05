@@ -5,7 +5,8 @@ import sys
 import os
 import six
 
-from easy_menu.setting.setting import Setting, ConfigError, SettingError
+from easy_menu.setting.setting import Setting
+from easy_menu.exceptions import ConfigError, SettingError, EncodingError
 from tests.universal import TestCase, mock
 from tests.fake_io import captured_output
 
@@ -267,14 +268,53 @@ class TestSetting(TestCase):
         ]
 
         for filename, expect in inputs:
+            path = self._testfile(os.path.join('error', filename))
             with captured_output() as (out, err):
                 self.assertRaisesRegexp(
                     ConfigError,
-                    '^Configuration error: %s: %s$' % (self._testfile(filename), expect),
-                    lambda: Setting(config_path=self._testfile(filename)).load_config()
+                    '^Configuration error: %s: %s$' % (path, expect),
+                    lambda: Setting(config_path=path).load_config()
                 )
-                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % self._testfile(filename))
+                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % path)
                 self.assertEqual(err.getvalue(), '')
+
+    def test_load_data_encoding_error_file(self):
+        path = self._testfile('sjis_ja.yml')
+        with captured_output() as (out, err):
+            self.assertRaisesRegexp(
+                EncodingError,
+                '^Failed to decode with utf-8: %s$' % path.replace('.', '\.'),
+                lambda: Setting(encoding='utf-8')._load_data(False, path)
+            )
+            self.assertEqual(out.getvalue(), 'Reading file: %s\n' % path)
+            self.assertEqual(err.getvalue(), '')
+
+    @mock.patch('easy_menu.setting.setting.urlopen')
+    def test_load_data_encoding_error_http(self, urlopen_mock):
+        # create a mock
+        urlopen_mock.return_value.read.return_value = '{"あ":[{"い":"う"},{"え":"お"}]}'.encode('sjis')
+
+        path = 'http://localhost/xxx.yml'
+        with captured_output() as (out, err):
+            self.assertRaisesRegexp(
+                EncodingError,
+                '^Failed to decode with utf-8: %s$' % path.replace('.', '\.'),
+                lambda: Setting(encoding='utf-8')._load_data(False, path)
+            )
+            self.assertEqual(out.getvalue(), 'Reading from URL: %s\n' % path)
+            self.assertEqual(err.getvalue(), '')
+
+    def test_load_data_encoding_error_cmd(self):
+        cmd = 'cat tests/resources/sjis_ja.yml'  # output should be SJIS
+
+        with captured_output() as (out, err):
+            self.assertRaisesRegexp(
+                EncodingError,
+                '^Failed to decode with utf-8: %s$' % cmd,
+                lambda: Setting(encoding='utf-8')._load_data(True, cmd)
+            )
+            self.assertEqual(out.getvalue(), 'Executing: %s\n' % cmd)
+            self.assertEqual(err.getvalue(), '')
 
     def test_load_meta(self):
         self._with_output(
@@ -351,11 +391,13 @@ class TestSetting(TestCase):
         ]
 
         for filename, expect in inputs:
+            path = self._testfile(os.path.join('error', filename))
+
             with captured_output() as (out, err):
                 self.assertRaisesRegexp(
                     ConfigError,
-                    '^Configuration error: %s: %s$' % (self._testfile(filename), expect),
-                    lambda: Setting(config_path=self._testfile(filename)).load_config()
+                    '^Configuration error: %s: %s$' % (path, expect),
+                    lambda: Setting(config_path=path).load_config()
                 )
-                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % self._testfile(filename))
+                self.assertEqual(out.getvalue(), 'Reading file: %s\n' % path)
                 self.assertEqual(err.getvalue(), '')

@@ -6,10 +6,10 @@ import io
 
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
-from easy_menu.exceptions import InterruptError
+from easy_menu.exceptions import InterruptError, SettingError, EncodingError
 from tests.universal import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput
+from tests.fake_io import FakeInput, captured_output
 
 
 class TestTerminal(TestCase):
@@ -23,11 +23,24 @@ class TestTerminal(TestCase):
         self.assertEqual(t.user, 'user')
 
     def test_init_error(self):
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=0))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=-1))
-        self.assertRaises(AssertionError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=10))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 39))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=0))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=-1))
+        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=10))
+
+    def test_print_error(self):
+        t = Terminal({'': []}, 'hose', 'user', self.get_exec(), encoding='ascii', lang='ja')
+
+        with captured_output() as (out, err):
+            self.assertRaisesRegexp(
+                EncodingError,
+                '^Failed to print menu: lang=ja, encoding=ascii$',
+                lambda: t._print('\n'.join(t._get_header('Header')))
+            )
+            self.assertEqual(out.getvalue(), '')
+            self.assertEqual(err.getvalue(), '')
 
     def test_get_page(self):
         self.maxDiff = None

@@ -9,7 +9,7 @@ import six
 from six.moves.urllib.request import urlopen
 
 from easy_menu.setting import arg_parser
-from easy_menu.exceptions import SettingError, ConfigError
+from easy_menu.exceptions import SettingError, ConfigError, EncodingError
 from easy_menu.util import CaseClass, cmd_util, string_util
 from easy_menu.util.collection_util import get_single_item
 
@@ -149,12 +149,15 @@ class Setting(CaseClass):
                     data = f.read()
 
             # If --encode option is not set, we use utf-8 for parsing YAML file.
-            menu = yaml.load(data.decode(self.encoding if self.encoding else 'utf-8'))
+            encoding = self.encoding or 'utf-8'
+            menu = yaml.load(data.decode(encoding))
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu
         except IOError:
             raise ConfigError(path_or_url_or_cmdline, 'Failed to open.')
+        except UnicodeDecodeError:
+            raise EncodingError('Failed to decode with %s: %s' % (encoding, path_or_url_or_cmdline))
         except yaml.YAMLError as e:
             raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % e)
         return menu

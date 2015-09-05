@@ -26,7 +26,7 @@ def main():
         t.loop()
     except InterruptError:
         pass
-    except (EasyMenuError, AssertionError) as e:
+    except EasyMenuError as e:
         print('%s: %s' % (e.__class__.__name__, e))
         return 2
     return 0
