@@ -9,3 +9,11 @@ class FakeInput(six.StringIO):
 
     def fileno(self):
         return 0
+
+
+class FakeBytesInput(six.BytesIO):
+    def __init__(self, buff=None):
+        six.BytesIO.__init__(self, buff)
+
+    def fileno(self):
+        return 0

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-import tempfile
-import io
-
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import SettingError, EncodingError

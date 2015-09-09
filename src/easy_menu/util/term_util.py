@@ -49,17 +49,23 @@ def getch(_input=sys.stdin):
     else:
         ch = _wrap_termios(_input, lambda: _input.read(1))
 
+    try:
+        uch = string_util.to_unicode(ch, 'ascii')
+    except UnicodeError:
+        return ''
+
     t = time.time()
 
     # check key repeat
-    if LAST_GETCH_CHAR == ch:
+    if LAST_GETCH_CHAR == uch:
         if t < LAST_GETCH_TIME + 0.3:
             LAST_GETCH_TIME = t
             return ''
 
     LAST_GETCH_TIME = t
-    LAST_GETCH_CHAR = ch
-    return ch
+    LAST_GETCH_CHAR = uch
+
+    return uch
 
 
 def clear_screen(_input=sys.stdin, _output=sys.stdout):
