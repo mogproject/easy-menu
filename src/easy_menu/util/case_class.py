@@ -62,3 +62,9 @@ class CaseClass(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join('%s=%r' % (k, getattr(self, k)) for k in self._keys))
+
+    def values(self):
+        """
+        :return: key-value dict : { string: any }
+        """
+        return dict((k, getattr(self, k)) for k in self._keys)
