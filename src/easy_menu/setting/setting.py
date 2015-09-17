@@ -40,18 +40,9 @@ class Setting(CaseClass):
         )
 
     def copy(self, **args):
-        return Setting(
-            config_path=args.get('config_path', self.config_path),
-            work_dir=args.get('work_dir', self.work_dir),
-            root_menu=args.get('root_menu', self.root_menu),
-            encoding=args.get('encoding', self.encoding),
-            lang=args.get('lang', self.lang),
-            width=args.get('width', self.width),
-            stdin=args.get('stdin', self.stdin),
-            stdout=args.get('stdout', self.stdout),
-            stderr=args.get('stderr', self.stderr),
-            cache=args.get('cache', self.cache),
-        )
+        d = self.values()
+        d.update(args)
+        return Setting(**d)
 
     @staticmethod
     def _find_lang(lang):
