@@ -18,7 +18,7 @@ def main(stdin=None, stdout=None, stderr=None):
 
     try:
         setting = base_setting.parse_args(sys.argv).lookup_config().load_meta().load_config()
-        executor = CommandExecutor(setting.work_dir, SystemLogger())
+        executor = CommandExecutor(setting.work_dir, SystemLogger(setting.encoding))
 
         t = Terminal(
             setting.root_menu,

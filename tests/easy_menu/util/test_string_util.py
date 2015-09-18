@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import six
 from easy_menu.util import string_util
-from tests.universal import TestCase
+from tests.universal import TestCase, unittest
 
 
 class TestStringUtil(TestCase):
@@ -15,6 +16,30 @@ class TestStringUtil(TestCase):
         self.assertEqual(string_util.to_unicode(b'abc'), 'abc')
         self.assertEqual(string_util.to_unicode('あいう'), 'あいう')
         self.assertEqual(string_util.to_unicode(1.23), '1.23')
+
+    def test_to_str(self):
+        self.assertEqual(string_util.to_str(b'abc'), string_util.to_str('abc'))
+        self.assertEqual(string_util.to_str(1.23), '1.23')
+
+    @unittest.skipUnless(six.PY2, 'requires Python 2')
+    def test_to_str_py2(self):
+        s = 'あいう'
+        t = s.encode('utf-8')
+        self.assertTrue(isinstance(s, unicode))
+        self.assertTrue(isinstance(string_util.to_str(s), str))
+        self.assertTrue(isinstance(t, str))
+        self.assertTrue(isinstance(string_util.to_str(t), str))
+        self.assertEqual(string_util.to_str(s), string_util.to_str(t))
+
+    @unittest.skipUnless(six.PY3, 'requires Python 3')
+    def test_to_str_py3(self):
+        s = 'あいう'
+        t = s.encode('utf-8')
+        self.assertTrue(isinstance(s, str))
+        self.assertTrue(isinstance(string_util.to_str(s), str))
+        self.assertTrue(isinstance(t, bytes))
+        self.assertTrue(isinstance(string_util.to_str(t), str))
+        self.assertEqual(string_util.to_str(s), string_util.to_str(t))
 
     def test_edge_just(self):
         self.assertEqual(string_util.edge_just('', '', 0), ' ')
