@@ -248,6 +248,8 @@ class TestSetting(TestCase):
             )
 
     def test_load_data_error(self):
+        self.maxDiff = None
+
         self.assertRaisesRegexp(
             SettingError,
             '^Not found configuration file[.]$',
@@ -255,22 +257,56 @@ class TestSetting(TestCase):
         )
 
         inputs = [
-            ('error_not_exist.yml', 'Failed to open[.]'),
+            ('error_not_exist.yml', 'Failed to open.'),
             ('error_parser.yml', 'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
-                                 '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      \^'),
+                                 '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      ^'),
+            ('error_parser_utf8_ja.yml', 'YAML format error: while parsing a flow mapping\n'
+                                         '  in "<unicode string>", line 1, column 1:\n'
+                                         '    {\n'
+                                         '    ^\n'
+                                         "expected ',' or '}', but got '<scalar>'\n"
+                                         '  in "<unicode string>", line 3, column 7:\n'
+                                         """        {"サービス稼動状態確認": "echo 'サービス稼動状態確認'"},\n"""
+                                         '          ^'),
             ('error_scanner.yml',
              'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "'
-             '\n    \^\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    \^')
+             '\n    ^\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    ^')
+        ]
+
+        # we don't use assertRaisesRegexp because the message contains utf-8 characters
+        for filename, expect in inputs:
+            path = self._testfile(os.path.join('error', filename))
+            with self.withAssertOutput('Reading file: %s\n' % path, '') as (out, err):
+                with self.assertRaises(ConfigError) as cm:
+                    Setting(config_path=path, stdout=out, stderr=err).load_config()
+                self.assertEqual(str(cm.exception) if six.PY3 else cm.exception.message, '%s: %s' % (path, expect))
+
+    def test_load_data_sjis(self):
+        self.maxDiff = None
+
+        self.assertRaisesRegexp(
+            SettingError,
+            '^Not found configuration file[.]$',
+            lambda: Setting()._load_data(False, None)
+        )
+
+        inputs = [
+            ('error_parser_sjis_ja.yml', 'YAML format error: while parsing a flow mapping\n'
+                                         '  in "<unicode string>", line 1, column 1:\n'
+                                         '    {\n'
+                                         '    ^\n'
+                                         "expected ',' or '}', but got '<scalar>'\n"
+                                         '  in "<unicode string>", line 3, column 7:\n'
+                                         """        {"サービス稼動状態確認": "echo 'サービス稼動状態確認'"},\n"""
+                                         '          ^'),
         ]
 
         for filename, expect in inputs:
             path = self._testfile(os.path.join('error', filename))
             with self.withAssertOutput('Reading file: %s\n' % path, '') as (out, err):
-                self.assertRaisesRegexp(
-                    ConfigError,
-                    '^%s: %s$' % (path, expect),
-                    lambda: Setting(config_path=path, stdout=out, stderr=err).load_config()
-                )
+                with self.assertRaises(ConfigError) as cm:
+                    Setting(config_path=path, stdout=out, stderr=err, encoding='sjis').load_config()
+                self.assertEqual(str(cm.exception) if six.PY3 else cm.exception.message, '%s: %s' % (path, expect))
 
     def test_load_data_encoding_error_file(self):
         path = self._testfile('sjis_ja.yml')
