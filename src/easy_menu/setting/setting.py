@@ -7,6 +7,7 @@ import re
 import yaml
 import six
 from six.moves.urllib.request import urlopen
+from jinja2 import Environment
 
 from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError, EncodingError
@@ -147,7 +148,16 @@ class Setting(CaseClass):
 
             # If --encode option is not set, we use utf-8 for parsing YAML file.
             encoding = self.encoding or 'utf-8'
-            menu = yaml.load(data.decode(encoding))
+            data_str = data.decode(encoding)
+
+            # apply jinja2 template rendering
+            try:
+                data_str = Environment().from_string(data_str).render()
+            finally:
+                pass
+
+            # load as YAML string
+            menu = yaml.load(data_str)
 
             # update cache data (Note: cache property is mutable!)
             self.cache[(is_command, path_or_url_or_cmdline)] = menu

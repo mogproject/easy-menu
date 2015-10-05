@@ -235,6 +235,35 @@ class TestSetting(TestCase):
                                  ]},
                                  {'Menu 6': ['echo 1', 'echo 2', 'false', 'echo 3']}]}
                              )
+        # template
+        with self.withAssertOutput('Reading file: tests/resources/with_template.yml\n', '') as (out, err):
+            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/with_template.yml'),
+                             {'Main Menu': [
+                                 {'Menu 1': 'echo 1'},
+                                 {'Menu 2': 'echo 2'},
+                                 {'Menu 3': 'echo 3'},
+                             ]})
+        with self.withAssertOutput('Reading file: tests/resources/with_template_utf8_ja.yml\n', '') as (out, err):
+            self.assertEqual(
+                Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/with_template_utf8_ja.yml'),
+                {
+                    "メインメニュー": [
+                        {"サービス稼動状態確認": "echo 'サービス稼動状態確認'"},
+                        {"サーバリソース状況確認": "echo 'サーバリソース状況確認'"},
+                        {"業務状態制御メニュー": [
+                            {"業務状態確認": "echo '業務状態確認'"},
+                            {"業務開始": "echo '業務開始'"},
+                            {"業務終了": "echo '業務終了'"}
+                        ]},
+                        {"Webサービス制御メニュー": [
+                            {"Webサービス状態確認": "echo 'Webサービス状態確認'"},
+                            {"Webサービス起動": "echo 'Webサービス起動'"},
+                            {"Webサービス停止": "echo 'Webサービス停止'"}
+                        ]},
+                        {"サーバ再起動": "echo 'サーバ再起動'"}
+                    ]
+                }
+            )
 
     @mock.patch('easy_menu.setting.setting.urlopen')
     def test_load_data_http(self, urlopen_mock):
@@ -260,6 +289,9 @@ class TestSetting(TestCase):
             ('error_not_exist.yml', 'Failed to open.'),
             ('error_parser.yml', 'YAML format error: expected \'<document start>\', but found \'<scalar>\'\n'
                                  '  in "<unicode string>", line 1, column 3:\n    \'\':1\n      ^'),
+            ('error_scanner.yml',
+             'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "'
+             '\n    ^\nfound unexpected end of stream\n  in "<unicode string>", line 1, column 2:\n    "\n     ^'),
             ('error_parser_utf8_ja.yml', 'YAML format error: while parsing a flow mapping\n'
                                          '  in "<unicode string>", line 1, column 1:\n'
                                          '    {\n'
@@ -268,9 +300,6 @@ class TestSetting(TestCase):
                                          '  in "<unicode string>", line 3, column 7:\n'
                                          """        {"サービス稼動状態確認": "echo 'サービス稼動状態確認'"},\n"""
                                          '          ^'),
-            ('error_scanner.yml',
-             'YAML format error: while scanning a quoted scalar\n  in "<unicode string>", line 1, column 1:\n    "'
-             '\n    ^\nfound unexpected end of stream\n  in "<unicode string>", line 2, column 1:\n    \n    ^')
         ]
 
         # we don't use assertRaisesRegexp because the message contains utf-8 characters
@@ -281,7 +310,7 @@ class TestSetting(TestCase):
                     Setting(config_path=path, stdout=out, stderr=err).load_config()
                 self.assertEqual(str(cm.exception) if six.PY3 else cm.exception.message, '%s: %s' % (path, expect))
 
-    def test_load_data_sjis(self):
+    def test_load_data_error_sjis(self):
         self.maxDiff = None
 
         self.assertRaisesRegexp(
