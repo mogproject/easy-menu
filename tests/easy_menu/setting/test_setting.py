@@ -148,6 +148,8 @@ class TestSetting(TestCase):
         self.assertEqual(Setting(work_dir='/').lookup_config(), Setting(work_dir='/'))
 
     def test_load_data(self):
+        self.maxDiff = None
+
         with self.withAssertOutput('Reading file: tests/resources/minimum.yml\n', '') as (out, err):
             self.assertEqual(
                 Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/minimum.yml'),
@@ -218,6 +220,21 @@ class TestSetting(TestCase):
                     ]
                 }
             )
+        # multiple commands
+        with self.withAssertOutput('Reading file: tests/resources/multi_commands.yml\n', '') as (out, err):
+            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/multi_commands.yml'),
+                             {'Main Menu': [
+                                 {'Sub Menu 1': [
+                                     {'Menu 1': ['echo 1', 'echo 2']},
+                                 ]},
+                                 {'Sub Menu 2': [
+                                     {'Sub Menu 3': [
+                                         {'Menu 3': 'echo 3'},
+                                         {'Menu 4': 'echo 4'}
+                                     ]}, {'Menu 5': 'echo 5'}
+                                 ]},
+                                 {'Menu 6': ['echo 1', 'echo 2', 'false', 'echo 3']}]}
+                             )
 
     @mock.patch('easy_menu.setting.setting.urlopen')
     def test_load_data_http(self, urlopen_mock):

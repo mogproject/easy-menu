@@ -215,7 +215,10 @@ class Setting(CaseClass):
                 return build_config(self._load_data(True, content), True, depth + 1)
             else:
                 if isinstance(content, list):
-                    content = [build_config(child, False, depth + 1) for child in content]
+                    if all(isinstance(child, six.string_types) for child in content):
+                        content = [string_util.to_unicode(cmd, self.encoding) for cmd in content]
+                    else:
+                        content = [build_config(child, False, depth + 1) for child in content]
                 elif is_leaf:
                     if is_root:
                         raise ConfigError(self.config_path, 'Root content must be list, not %s.' % t)
