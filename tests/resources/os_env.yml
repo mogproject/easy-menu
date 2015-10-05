@@ -1,0 +1,8 @@
+---
+Main Menu:
+  - Menu 1: echo $LANG
+  - Menu 2: echo $XXX
+  - Menu 3: echo $HOME
+  - Menu 4: echo $HOSTNAME
+  - Menu 5: echo $USER
+  - Menu 6: echo $HOSTNAME $USER
