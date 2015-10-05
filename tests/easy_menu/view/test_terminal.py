@@ -427,3 +427,43 @@ class TestTerminal(TestCase):
             (6, "[INFO] Command started: echo 'あいうえお'"),
             (6, "[INFO] Command ended with return code: 0"),
         ])
+
+    def test_loop_multiple_commands(self):
+        self.maxDiff = None
+
+        root_menu = {'Main Menu': [
+            {'Sub Menu 1': [
+                {'Menu 1': ['echo 1', 'echo 2']},
+            ]},
+            {'Sub Menu 2': [
+                {'Sub Menu 3': [
+                    {'Menu 3': 'echo 3'},
+                    {'Menu 4': 'echo 4'}
+                ]}, {'Menu 5': 'echo 5'}
+            ]},
+            {'Menu 6': ['echo 6', 'echo 7', 'false', 'echo 8']}]
+        }
+
+        _in = FakeInput(''.join(['1', '.1yx', '0', '21.1yx', '0.0', '3yx', '0']))
+
+        # We use a temporary file due to capture the output of subprocess#call.
+        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop_multiple_commands.txt') as out:
+            t = Terminal(
+                root_menu,
+                'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
+            t.loop()
+
+        self.assertEqual(t.executor.logger.buffer, [
+            (6, '[INFO] Command started: echo 1'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo 2'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo 3'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo 6'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: echo 7'),
+            (6, '[INFO] Command ended with return code: 0'),
+            (6, '[INFO] Command started: false'),
+            (6, '[INFO] Command ended with return code: 1'),
+        ])

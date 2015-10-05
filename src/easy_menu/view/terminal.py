@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import sys
+import six
 
 from easy_menu.util import string_util, term_util
 from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
@@ -199,7 +200,9 @@ class Terminal(object):
 
                     # check if it is a sub menu
                     if isinstance(command, list):
-                        return lambda s, o: (s + [d], 0)
+                        # check if it is a command list
+                        if not all(isinstance(child, six.string_types) for child in command):
+                            return lambda s, o: (s + [d], 0)
 
                     def f(s, o):  # side effect only
                         self.execute_command(description, command)
@@ -216,7 +219,7 @@ class Terminal(object):
         Confirm with prompt before executing command.
 
         :param description: description string
-        :param command: command line string
+        :param command: command line string or list of command line string
         :return: None
         """
 
@@ -232,12 +235,22 @@ class Terminal(object):
 
         # run command
         self._draw(self.get_before_execute(description))
-        return_code = self.executor.execute(
-            command, stdin=self._input, stdout=self._output, stderr=self._output, encoding=self.encoding)
 
-        if return_code == 130:
-            # maybe interrupted
-            self._print('\n')
+        # if command is string, convert to a list
+        if isinstance(command, six.string_types):
+            command = [command]
+
+        return_code = 0
+        for cmd in command:
+            return_code = self.executor.execute(
+                cmd, stdin=self._input, stdout=self._output, stderr=self._output, encoding=self.encoding)
+
+            if return_code == 130:
+                # maybe interrupted
+                self._print('\n')
+            # if a command fails, the successors will not run
+            if return_code != 0:
+                break
 
         self._print(self.get_after_execute(return_code))
         self.wait_input_char()  # wait for any input

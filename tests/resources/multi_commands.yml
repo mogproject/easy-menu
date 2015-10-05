@@ -1,0 +1,17 @@
+---
+Main Menu:
+  - Sub Menu 1:
+    - Menu 1:
+      - echo 1
+      - echo 2
+  - Sub Menu 2:
+    - Sub Menu 3:
+      - Menu 3: echo 3
+      - Menu 4: echo 4
+    - Menu 5: echo 5
+  - Menu 6:
+    - echo 1
+    - echo 2
+    - "false"
+    - echo 3
+
