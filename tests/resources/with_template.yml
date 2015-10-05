@@ -1,0 +1,7 @@
+{% set cmd = 'echo' %}
+---
+Main Menu:
+{% for i in [1, 2, 3] %}
+  - Menu {{ i }}: {{ cmd }} {{ i }}
+{% endfor %}
+
