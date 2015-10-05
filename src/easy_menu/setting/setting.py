@@ -156,7 +156,7 @@ class Setting(CaseClass):
         except UnicodeDecodeError:
             raise EncodingError('Failed to decode with %s: %s' % (encoding, path_or_url_or_cmdline))
         except yaml.YAMLError as e:
-            raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % e)
+            raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % string_util.to_unicode(str(e)))
         return menu
 
     def load_meta(self):
