@@ -44,6 +44,7 @@ Dependencies
 * Python: 2.6 / 2.7 / 3.2 / 3.3 / 3.4
 * pyyaml
 * six
+* jinja2 == 2.6
 
 ----------
 Quickstart
@@ -120,6 +121,10 @@ The general syntax is like this.
         - SUB_MENU_TITLE:            # More nested menu
           - ITEM_DESCRIPTION: COMMAND
           - ITEM_DESCRIPTION: COMMAND
+      - ITEM_DESCRIPTION:            # You can write a list of command lines for one item.
+          - COMMAND1
+          - COMMAND2
+          - COMMAND3
       - include: INCLUDE_FILE_PATH   # "include" keyword enables to load
                                      #   another configuration file.
       - eval: COMMAND                # "eval" keyword will execute command line
@@ -160,19 +165,14 @@ Example::
     Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command started: echo Condition all green!
     Aug 31 00:09:59 ullr.local easy-menu[28802]: [INFO] Command ended with return code: 0
 
---------------
-Meta Variables
---------------
+----------
+Go further
+----------
 
-You can overwrite options by writing ``meta`` variables in the root configuration file.
+Need more help?
 
-+-------------------------+---------------------------------------+
-| Option                  | Description                           |
-+=========================+=======================================+
-| work_dir                | Path to the working directory         |
-+-------------------------+---------------------------------------+
+* `Advanced Configuration <https://github.com/mogproject/easy-menu/wiki/AdvancedConfiguration>`_
+* `Troubleshooting <https://github.com/mogproject/easy-menu/wiki/Troubleshooting>`_
+* `Add issue <https://waffle.io/mogproject/easy-menu>`_
+* Looking for legacy version? Please refer to `v0.0 <https://github.com/mogproject/easy-menu/tree/v0.0>`_.
 
-
-----
-
-Looking for legacy version? Please refer to `v0.0 <https://github.com/mogproject/easy-menu/tree/v0.0>`_.
