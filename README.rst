@@ -12,6 +12,10 @@ Super Simple Terminal Command Launcher Generator
    :target: https://travis-ci.org/mogproject/easy-menu
    :alt: Build Status
 
+.. image:: https://ci.appveyor.com/api/projects/status/tcw4sabh96fl7u2y/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/mogproject/easy-menu/branch/master
+   :alt: Build Status
+
 .. image:: https://coveralls.io/repos/mogproject/easy-menu/badge.svg?branch=master&service=github
    :target: https://coveralls.io/github/mogproject/easy-menu?branch=master
    :alt: Coverage Status

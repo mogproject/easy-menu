@@ -25,7 +25,7 @@ setup(
     ],
     tests_require=[
         'unittest2',
-        'mock',
+        'mock == 1.0.1',  # lock version to older version of setuptools
     ],
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),
