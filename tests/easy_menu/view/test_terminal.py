@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import os
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.exceptions import SettingError, EncodingError
-from tests.universal import TestCase
+from tests.universal import TestCase, unittest
 from tests.easy_menu.logger.mock_logger import MockLogger
 from tests.fake_io import FakeInput
 
@@ -358,6 +359,7 @@ class TestTerminal(TestCase):
             '何かキーを押すとメニューに戻ります...'
         ]))
 
+    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_wait_input_char(self):
         _in = FakeInput('xyz\x03\n\x04')
         t = Terminal({'': []}, 'host', 'user', self.get_exec(), _input=_in)
@@ -368,6 +370,7 @@ class TestTerminal(TestCase):
         self.assertEqual(t.wait_input_char(), '\n')
         self.assertRaises(KeyboardInterrupt, t.wait_input_char)
 
+    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_loop(self):
         self.maxDiff = None
 
@@ -410,6 +413,7 @@ class TestTerminal(TestCase):
             (6, '[INFO] Command ended with return code: 0'),
         ])
 
+    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_loop_sjis(self):
         self.maxDiff = None
 
@@ -428,6 +432,7 @@ class TestTerminal(TestCase):
             (6, "[INFO] Command ended with return code: 0"),
         ])
 
+    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_loop_multiple_commands(self):
         self.maxDiff = None
 

@@ -6,7 +6,7 @@ import os
 from contextlib import contextmanager
 from easy_menu import easy_menu
 from easy_menu.util import network_util, string_util
-from tests.universal import TestCase, mock
+from tests.universal import TestCase, mock, unittest
 from tests.easy_menu.logger.mock_logger import MockLogger
 from tests.fake_io import FakeInput
 
@@ -22,6 +22,7 @@ class TestTerminal(TestCase):
         finally:
             sys.argv = old
 
+    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     @mock.patch('easy_menu.easy_menu.SystemLogger')
     def test_main(self, mock_logger):
         self.maxDiff = None

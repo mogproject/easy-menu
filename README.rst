@@ -12,6 +12,10 @@ Super Simple Terminal Command Launcher Generator
    :target: https://travis-ci.org/mogproject/easy-menu
    :alt: Build Status
 
+.. image:: https://ci.appveyor.com/api/projects/status/tcw4sabh96fl7u2y/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/mogproject/easy-menu/branch/master
+   :alt: Build Status
+
 .. image:: https://coveralls.io/repos/mogproject/easy-menu/badge.svg?branch=master&service=github
    :target: https://coveralls.io/github/mogproject/easy-menu?branch=master
    :alt: Coverage Status
@@ -41,7 +45,7 @@ It should be helpful not only for salted engineers but unskilled operators.
 Dependencies
 ------------
 
-* Python: 2.6 / 2.7 / 3.2 / 3.3 / 3.4
+* Python: 2.6 / 2.7 / 3.2 / 3.3 / 3.4 / 3.5
 * pyyaml
 * six
 * jinja2 == 2.6
