@@ -47,7 +47,7 @@ class TestSetting(TestCase):
         self.assertEqual(s5.work_dir, '/tmp')
         self.assertEqual(s5.root_menu, {})
 
-    def test_find_encoding(self):
+    def test_resolve_encoding(self):
         import io
         import codecs
 
@@ -57,9 +57,8 @@ class TestSetting(TestCase):
         else:
             out = io.TextIOWrapper(six.StringIO(), 'sjis')
 
-        self.assertEqual(Setting()._find_encoding(None, out), 'sjis')
-        self.assertEqual(Setting(stdout=out).encoding, 'sjis')
-        self.assertEqual(Setting(encoding='utf-8', stdout=out).encoding, 'utf-8')
+        self.assertEqual(Setting(stdout=out).resolve_encoding().encoding, 'sjis')
+        self.assertEqual(Setting(encoding='utf-8', stdout=out).resolve_encoding().encoding, 'utf-8')
 
     def test_find_lang(self):
         s = Setting()
@@ -68,7 +67,7 @@ class TestSetting(TestCase):
         if old:
             del os.environ['LANG']
         self.assertEqual(s._find_lang('ja_JP'), 'ja_JP')
-        s._find_lang(None).islower()  # return value depends on the system
+        s._find_lang(None)  # return value depends on the system
 
         os.environ['LANG'] = 'en_US'
         self.assertEqual(s._find_lang(None), 'en_US')
@@ -155,28 +154,29 @@ class TestSetting(TestCase):
 
         with self.withAssertOutput('Reading file: tests/resources/minimum.yml\n', '') as (out, err):
             self.assertEqual(
-                Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/minimum.yml'),
+                Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(False, 'tests/resources/minimum.yml'),
                 {'': []}
             )
 
         with self.withAssertOutput('Reading file: tests/resources/nested.yml\n', '') as (out, err):
-            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/nested.yml'),
-                             {'Main Menu': [
-                                 {'Sub Menu 1': [
-                                     {'Menu 1': 'echo 1'},
-                                     {'Menu 2': 'echo 2'}
-                                 ]},
-                                 {'Sub Menu 2': [
-                                     {'Sub Menu 3': [
-                                         {'Menu 3': 'echo 3'},
-                                         {'Menu 4': 'echo 4'}
-                                     ]}, {'Menu 5': 'echo 5'}
-                                 ]},
-                                 {'Menu 6': 'echo 6'}]}
-                             )
+            self.assertEqual(
+                Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(False, 'tests/resources/nested.yml'),
+                {'Main Menu': [
+                    {'Sub Menu 1': [
+                        {'Menu 1': 'echo 1'},
+                        {'Menu 2': 'echo 2'}
+                    ]},
+                    {'Sub Menu 2': [
+                        {'Sub Menu 3': [
+                            {'Menu 3': 'echo 3'},
+                            {'Menu 4': 'echo 4'}
+                        ]}, {'Menu 5': 'echo 5'}
+                    ]},
+                    {'Menu 6': 'echo 6'}]}
+            )
         with self.withAssertOutput('Reading file: tests/resources/with_meta.yml\n', '') as (out, err):
             self.assertEqual(
-                Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/with_meta.yml'),
+                Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(False, 'tests/resources/with_meta.yml'),
                 {'meta': {'work_dir': '/tmp'},
                  'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
                                {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
@@ -190,9 +190,9 @@ class TestSetting(TestCase):
             )
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('minimum.yml'), '') as (out, err):
             self.assertEqual(
-                Setting(work_dir=os.path.abspath('tests/resources'), stdout=out, stderr=err)._load_data(False,
-                                                                                                        'minimum.yml'),
-                {'': []}
+                Setting(
+                    work_dir=os.path.abspath('tests/resources'), encoding='utf-8', stdout=out, stderr=err
+                )._load_data(False, 'minimum.yml'), {'': []}
             )
         # SJIS
         with self.withAssertOutput('Reading file: tests/resources/sjis_ja.yml\n', '') as (out, err):
@@ -218,27 +218,31 @@ class TestSetting(TestCase):
             )
         # multiple commands
         with self.withAssertOutput('Reading file: tests/resources/multi_commands.yml\n', '') as (out, err):
-            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/multi_commands.yml'),
-                             {'Main Menu': [
-                                 {'Sub Menu 1': [
-                                     {'Menu 1': ['echo 1', 'echo 2']},
-                                 ]},
-                                 {'Sub Menu 2': [
-                                     {'Sub Menu 3': [
-                                         {'Menu 3': 'echo 3'},
-                                         {'Menu 4': 'echo 4'}
-                                     ]}, {'Menu 5': 'echo 5'}
-                                 ]},
-                                 {'Menu 6': ['echo 1', 'echo 2', 'false', 'echo 3']}]}
-                             )
+            self.assertEqual(Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(
+                False, 'tests/resources/multi_commands.yml'),
+                {'Main Menu': [
+                    {'Sub Menu 1': [
+                        {'Menu 1': ['echo 1', 'echo 2']},
+                    ]},
+                    {'Sub Menu 2': [
+                        {'Sub Menu 3': [
+                            {'Menu 3': 'echo 3'},
+                            {'Menu 4': 'echo 4'}
+                        ]}, {'Menu 5': 'echo 5'}
+                    ]},
+                    {'Menu 6': ['echo 1', 'echo 2', 'false', 'echo 3']}]}
+            )
         # template
         with self.withAssertOutput('Reading file: tests/resources/with_template.yml\n', '') as (out, err):
-            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(False, 'tests/resources/with_template.yml'),
-                             {'Main Menu': [
-                                 {'Menu 1': 'echo 1'},
-                                 {'Menu 2': 'echo 2'},
-                                 {'Menu 3': 'echo 3'},
-                             ]})
+            self.assertEqual(
+                Setting(
+                    encoding='utf-8', stdout=out, stderr=err
+                )._load_data(False, 'tests/resources/with_template.yml'),
+                {'Main Menu': [
+                    {'Menu 1': 'echo 1'},
+                    {'Menu 2': 'echo 2'},
+                    {'Menu 3': 'echo 3'},
+                ]})
         with self.withAssertOutput('Reading file: tests/resources/with_template_utf8_ja.yml\n', '') as (out, err):
             self.assertEqual(
                 Setting(
@@ -267,10 +271,10 @@ class TestSetting(TestCase):
     def test_load_data_dynamic(self):
         with self.withAssertOutput(
                 """Executing: echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'\n""", '') as (out, err):
-            self.assertEqual(Setting(stdout=out, stderr=err)._load_data(
+            self.assertEqual(Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(
                 True,
                 """echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'"""),
-                             {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
+                {'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}]}
             )
 
     @mock.patch('easy_menu.setting.setting.urlopen')
@@ -280,7 +284,7 @@ class TestSetting(TestCase):
 
         with self.withAssertOutput('Reading from URL: http://localhost/xxx.yml\n', '') as (out, err):
             self.assertEqual(
-                Setting(stdout=out, stderr=err)._load_data(False, 'http://localhost/xxx.yml'),
+                Setting(encoding='utf-8', stdout=out, stderr=err)._load_data(False, 'http://localhost/xxx.yml'),
                 {'title': [{'a': 'x'}, {'b': 'y'}]}
             )
 
@@ -380,7 +384,9 @@ class TestSetting(TestCase):
     def test_load_meta(self):
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('minimum.yml'), '') as (out, err):
             self.assertEqual(
-                Setting(self._testfile('minimum.yml'), stdout=out, stderr=err).load_meta().work_dir,
+                Setting(
+                    self._testfile('minimum.yml'), encoding='utf-8', stdout=out, stderr=err
+                ).load_meta().work_dir,
                 os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources')
             )
         with self.withAssertOutput('', '') as (out, err):
@@ -400,12 +406,14 @@ class TestSetting(TestCase):
             )
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('with_meta.yml'), '') as (out, err):
             self.assertEqual(
-                Setting(self._testfile('with_meta.yml'), stdout=out, stderr=err).load_meta().work_dir,
+                Setting(
+                    self._testfile('with_meta.yml'), encoding='utf-8', stdout=out, stderr=err
+                ).load_meta().work_dir,
                 '/tmp'
             )
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('with_meta.yml'), '') as (out, err):
             self.assertEqual(
-                Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp', stdout=out,
+                Setting(self._testfile('with_meta.yml'), work_dir='/var/tmp', encoding='utf-8', stdout=out,
                         stderr=err).load_meta().work_dir,
                 '/tmp'
             )
@@ -413,19 +421,22 @@ class TestSetting(TestCase):
     def test_load_config(self):
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('minimum.yml'), '') as (out, err):
             self.assertEqual(
-                Setting(config_path=self._testfile('minimum.yml'), stdout=out, stderr=err).load_config().root_menu,
+                Setting(
+                    config_path=self._testfile('minimum.yml'), encoding='utf-8', stdout=out, stderr=err
+                ).load_config().root_menu,
                 {'': []}
             )
         path = os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources', 'flat.yml')
         with self.withAssertOutput('Reading file: %s\n' % path, '') as (out, err):
             self.assertEqual(
-                Setting(config_path=self._testfile('flat.yml'), stdout=out, stderr=err).load_config().root_menu,
+                Setting(
+                    config_path=self._testfile('flat.yml'), encoding='utf-8', stdout=out, stderr=err
+                ).load_config().root_menu,
                 {
                     'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'},
                                   {'Menu 4': 'echo 4'},
                                   {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
             )
-
 
     @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_load_config_dynamic(self):
@@ -436,7 +447,9 @@ class TestSetting(TestCase):
         ])
         with self.withAssertOutput(expect, '') as (out, err):
             self.assertEqual(
-                Setting(config_path=self._testfile('with_dynamic.yml'), stdout=out, stderr=err).load_config().root_menu,
+                Setting(
+                    config_path=self._testfile('with_dynamic.yml'), encoding='utf-8', stdout=out, stderr=err
+                ).load_config().root_menu,
                 {'Main Menu': [{'Menu 1': 'echo 1'}, {'Sub Menu': [{'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}]}]}
             )
 
@@ -461,5 +474,5 @@ class TestSetting(TestCase):
                 self.assertRaisesRegexp(
                     ConfigError,
                     r'^%s: %s$' % (path.replace('\\', '\\\\'), expect),
-                    lambda: Setting(config_path=path, stdout=out, stderr=err).load_config()
+                    lambda: Setting(config_path=path, encoding='utf-8', stdout=out, stderr=err).load_config()
                 )

@@ -31,7 +31,7 @@ class Setting(CaseClass):
             ('config_path', config_path),
             ('work_dir', self._search_work_dir(work_dir, config_path, is_url)),
             ('root_menu', {} if root_menu is None else root_menu),
-            ('encoding', self._find_encoding(encoding, stdout)),
+            ('encoding', encoding),
             ('lang', self._find_lang(lang)),
             ('width', width),
             ('stdin', stdin or sys.stdin),
@@ -55,15 +55,6 @@ class Setting(CaseClass):
         return lang
 
     @staticmethod
-    def _find_encoding(encoding, output):
-        if not encoding:
-            if hasattr(output, 'encoding'):
-                encoding = output.encoding
-        if not encoding:
-            encoding = locale.getpreferredencoding()
-        return encoding
-
-    @staticmethod
     def _is_url(path):
         return path is not None and bool(URL_PATTERN.match(path))
 
@@ -74,6 +65,17 @@ class Setting(CaseClass):
                 if not is_url:
                     return os.path.dirname(config_path)
         return work_dir
+
+    def resolve_encoding(self):
+        encoding = self.encoding
+        if not encoding:
+            if hasattr(self.stdout, 'encoding'):
+                encoding = self.stdout.encoding
+        if not encoding:
+            encoding = locale.getpreferredencoding()
+        if not encoding:
+            encoding = 'utf-8'  # final fallback
+        return self.copy(encoding=encoding)
 
     def parse_args(self, argv):
         option, args = arg_parser.parser.parse_args(argv[1:])
