@@ -38,6 +38,19 @@ def _wrap_termios(_input, func):
     return ret
 
 
+def restore_term_func(_input=sys.stdin):
+    assert hasattr(_input, 'fileno'), 'Invalid input device.'
+
+    if os.name == 'nt':
+        return lambda signal, frame: None
+    fd = _input.fileno()
+    try:
+        original_settings = termios.tcgetattr(fd)
+    except termios.error:
+        return lambda signal, frame: None
+    return lambda signal, frame: termios.tcsetattr(fd, termios.TCSADRAIN, original_settings)
+
+
 def getch(_input=sys.stdin):
     """Wait and get one character from input"""
 
