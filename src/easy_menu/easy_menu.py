@@ -16,7 +16,8 @@ def main(stdin=None, stdout=None, stderr=None):
     """
 
     # for terminal restoration
-    signal.signal(signal.SIGTERM, term_util.restore_term_func(sys.stdin))
+    restore_term_func = term_util.restore_term_func(sys.stdin)
+    signal.signal(signal.SIGTERM, restore_term_func)
 
     base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr)
 
@@ -46,4 +47,7 @@ def main(stdin=None, stdout=None, stderr=None):
         # maybe killed by outside
         base_setting.stdout.write('\n%s: %s\n' % (e.__class__.__name__, e))
         return 3
+    finally:
+        # assume to restore original terminal settings
+        restore_term_func(None, None)
     return 0
