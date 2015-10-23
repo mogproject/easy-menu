@@ -102,7 +102,12 @@ class Terminal(object):
 
     def _get_description(self, item):
         d, c = get_single_item(item)
-        return self.i18n.MSG_SUB_MENU % d if isinstance(c, list) else d
+
+        # TODO: refactor
+        def f(content):
+            return isinstance(content, list) and not all(isinstance(child, six.string_types) for child in content)
+
+        return self.i18n.MSG_SUB_MENU % d if f(c) else d
 
     def get_page(self, titles, page_items, offset, num_pages):
         """Make menu page string."""
