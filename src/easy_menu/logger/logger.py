@@ -2,7 +2,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 from abc import ABCMeta, abstractmethod
 import six
-from easy_menu.util import CaseClass
+from mog_commons.case_class import CaseClass
 
 # copied from syslog module
 LOG_ALERT = 1

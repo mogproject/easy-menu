@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-from easy_menu.util import cmd_util
+from mog_commons.command import execute_command
 
 
 class CommandExecutor(object):
@@ -10,6 +10,12 @@ class CommandExecutor(object):
 
     def execute(self, cmd, stdin, stdout, stderr, encoding):
         self.logger.info('Command started: %s' % cmd)
-        ret_code = cmd_util.execute_command(cmd, self.work_dir, stdin, stdout, stderr, encoding)
-        self.logger.info('Command ended with return code: %d' % ret_code)
+        try:
+            ret_code = execute_command(cmd, shell=True, cwd=self.work_dir,
+                                       stdin=stdin, stdout=stdout, stderr=stderr, cmd_encoding=encoding)
+            self.logger.info('Command ended with return code: %d' % ret_code)
+        except KeyboardInterrupt:
+            self.logger.info('Command interrupted.')
+            ret_code = 130
+
         return ret_code
