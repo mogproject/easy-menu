@@ -8,12 +8,12 @@ import yaml
 import six
 from six.moves.urllib.request import urlopen
 from jinja2 import Environment
+from mog_commons.string import unicode_decode
 
 from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError, EncodingError
 from easy_menu.util import CaseClass, cmd_util, string_util, term_util
 from easy_menu.util.collection_util import get_single_item
-
 
 DEFAULT_CONFIG_NAME = os.environ.get('EASY_MENU_CONFIG', 'easy-menu.yml')
 URL_PATTERN = re.compile(r'^http[s]?://')
@@ -116,6 +116,7 @@ class Setting(CaseClass):
         :param path_or_url_or_cmdline:
         :return: dict representation of data
         """
+        assert self.encoding, 'encoding must be set.'
 
         if path_or_url_or_cmdline is None:
             raise SettingError('Not found configuration file.')
@@ -148,9 +149,8 @@ class Setting(CaseClass):
                 with open(path_or_url_or_cmdline, 'rb') as f:
                     data = f.read()
 
-            # If --encode option is not set, we use utf-8 for parsing YAML file.
-            encoding = self.encoding or 'utf-8'
-            data_str = data.decode(encoding)
+            # decode string with fallback
+            data_str = unicode_decode(data, [self.encoding, 'utf-8'])
 
             # apply jinja2 template rendering
             try:
@@ -166,7 +166,7 @@ class Setting(CaseClass):
         except IOError:
             raise ConfigError(path_or_url_or_cmdline, 'Failed to open.')
         except UnicodeDecodeError:
-            raise EncodingError('Failed to decode with %s: %s' % (encoding, path_or_url_or_cmdline))
+            raise EncodingError('Failed to decode with %s: %s' % (self.encoding, path_or_url_or_cmdline))
         except yaml.YAMLError as e:
             raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % string_util.to_unicode(str(e)))
         return menu
