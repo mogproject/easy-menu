@@ -7,8 +7,8 @@ try:
     SYSLOG_AVAILABLE = True
 except ImportError:
     SYSLOG_AVAILABLE = False
+from mog_commons.string import to_str
 from easy_menu.logger.logger import Logger
-from easy_menu.util import string_util
 
 
 class SystemLogger(Logger):
@@ -20,5 +20,5 @@ class SystemLogger(Logger):
     def _log(self, priority, message):
         if SYSLOG_AVAILABLE:
             syslog.openlog(self.name, syslog.LOG_PID)
-            syslog.syslog(priority, string_util.to_str(message, self.encoding))
+            syslog.syslog(priority, to_str(message, self.encoding))
             syslog.closelog()

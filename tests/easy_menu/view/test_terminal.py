@@ -501,6 +501,9 @@ class TestTerminal(TestCase):
                 root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP',
                 width=80)
             t.loop()
+            # out.seek(0)
+            # print(out.read())
+
         self.assertEqual(t.executor.logger.buffer, [
             (6, "[INFO] Command started: echo 'あいうえお'"),
             (6, "[INFO] Command ended with return code: 0"),

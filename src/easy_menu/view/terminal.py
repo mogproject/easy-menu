@@ -3,8 +3,10 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import sys
 import six
 
-from easy_menu.util import string_util, term_util
-from easy_menu.util.collection_util import get_single_item, get_single_key, get_single_value
+from mog_commons.collection import get_single_item, get_single_key, get_single_value
+from mog_commons.string import *
+from mog_commons.io import print_safe
+from easy_menu.util import term_util
 from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
 
@@ -68,7 +70,7 @@ class Terminal(object):
         return '=' * self.width
 
     def header_line(self):
-        return string_util.edge_just(self.i18n.MSG_HOST % self.host, self.i18n.MSG_USER % self.user, self.width)
+        return edge_just(self.i18n.MSG_HOST % self.host, self.i18n.MSG_USER % self.user, self.width)
 
     @staticmethod
     def title_line(title):
@@ -114,7 +116,7 @@ class Terminal(object):
 
         assert len(page_items) <= self.page_size, 'Number of page items must less or equal than page size.'
 
-        title = string_util.unicode_right(' > '.join(titles), self.width - 4)
+        title = unicode_right(' > '.join(titles), self.width - 4)
 
         pager_lines = [] if num_pages <= 1 else [
             self.pager_line(offset, num_pages),
@@ -171,10 +173,10 @@ class Terminal(object):
     # Output
     #
     def _print(self, unicode_text):
-        assert string_util.is_unicode(unicode_text), 'Text must be unicode: %s' % unicode_text
+        assert is_unicode(unicode_text), 'Text must be unicode: %s' % unicode_text
 
         try:
-            term_util.universal_print(self._output, unicode_text, self.encoding)
+            print_safe(unicode_text, self.encoding, output=self._output, errors='strict', newline='')
         except (LookupError, UnicodeError):
             raise EncodingError('Failed to print menu: lang=%s, encoding=%s' % (self.lang, self.encoding))
 

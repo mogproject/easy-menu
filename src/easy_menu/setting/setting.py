@@ -8,12 +8,15 @@ import yaml
 import six
 from six.moves.urllib.request import urlopen
 from jinja2 import Environment
-from mog_commons.string import unicode_decode
+from mog_commons.case_class import CaseClass
+from mog_commons.command import capture_command
+from mog_commons.string import *
+from mog_commons.collection import get_single_item
+from mog_commons.io import print_safe
 
 from easy_menu.setting import arg_parser
 from easy_menu.exceptions import SettingError, ConfigError, EncodingError
-from easy_menu.util import CaseClass, cmd_util, string_util, term_util
-from easy_menu.util.collection_util import get_single_item
+from easy_menu.util import term_util
 
 DEFAULT_CONFIG_NAME = os.environ.get('EASY_MENU_CONFIG', 'easy-menu.yml')
 URL_PATTERN = re.compile(r'^http[s]?://')
@@ -133,17 +136,18 @@ class Setting(CaseClass):
         try:
             if is_command:
                 # execute command
-                term_util.universal_print(self.stdout, 'Executing: %s\n' % path_or_url_or_cmdline, self.encoding)
+                print_safe('Executing: %s' % path_or_url_or_cmdline, self.encoding, output=self.stdout)
 
                 # ignore return code and stderr
-                data = cmd_util.capture_command(path_or_url_or_cmdline, self.work_dir, encoding=self.encoding)[1]
+                data = capture_command(path_or_url_or_cmdline, shell=True, cwd=self.work_dir,
+                                       cmd_encoding=self.encoding)[1]
             elif self._is_url(path_or_url_or_cmdline):
                 # read from URL
-                term_util.universal_print(self.stdout, 'Reading from URL: %s\n' % path_or_url_or_cmdline, self.encoding)
+                print_safe('Reading from URL: %s' % path_or_url_or_cmdline, self.encoding, output=self.stdout)
                 data = urlopen(path_or_url_or_cmdline).read()
             else:
                 # read from file as bytes
-                term_util.universal_print(self.stdout, 'Reading file: %s\n' % path_or_url_or_cmdline, self.encoding)
+                print_safe('Reading file: %s' % path_or_url_or_cmdline, self.encoding, output=self.stdout)
                 with open(path_or_url_or_cmdline, 'rb') as f:
                     data = f.read()
 
@@ -166,7 +170,7 @@ class Setting(CaseClass):
         except UnicodeDecodeError:
             raise EncodingError('Failed to decode with %s: %s' % (self.encoding, path_or_url_or_cmdline))
         except yaml.YAMLError as e:
-            raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % string_util.to_unicode(str(e)))
+            raise ConfigError(path_or_url_or_cmdline, 'YAML format error: %s' % to_unicode(str(e)))
         return menu
 
     def load_meta(self):
@@ -210,10 +214,10 @@ class Setting(CaseClass):
             t = type(content).__name__
 
             # encode key and leaf value
-            name = string_util.to_unicode(name)
+            name = to_unicode(name)
             is_leaf = isinstance(content, six.string_types)
             if is_leaf:
-                content = string_util.to_unicode(content, self.encoding)
+                content = to_unicode(content, self.encoding)
 
             if name == 'include':  # should be a leaf
                 if not is_leaf:
@@ -226,7 +230,7 @@ class Setting(CaseClass):
             else:
                 if isinstance(content, list):
                     if all(isinstance(child, six.string_types) for child in content):
-                        content = [string_util.to_unicode(cmd, self.encoding) for cmd in content]
+                        content = [to_unicode(cmd, self.encoding) for cmd in content]
                     else:
                         content = [build_config(child, False, depth + 1) for child in content]
                 elif is_leaf:
@@ -234,7 +238,7 @@ class Setting(CaseClass):
                         raise ConfigError(self.config_path, 'Root content must be list, not %s.' % t)
                 else:
                     raise ConfigError(self.config_path, 'Content must be string or list, not %s.' % t)
-            return {string_util.to_unicode(name, self.encoding): content}
+            return {to_unicode(name, self.encoding): content}
 
         root_menu = build_config(self._load_data(False, self.config_path), True, 0)
 
