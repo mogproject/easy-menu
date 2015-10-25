@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-from tests.universal import TestCase
+from mog_commons.unittest import TestCase
 from tests.easy_menu.logger.mock_logger import MockLogger
 
 

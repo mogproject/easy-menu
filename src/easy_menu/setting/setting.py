@@ -72,9 +72,7 @@ class Setting(CaseClass):
             if hasattr(self.stdout, 'encoding'):
                 encoding = self.stdout.encoding
         if not encoding:
-            encoding = locale.getpreferredencoding()
-        if not encoding:
-            encoding = 'utf-8'  # final fallback
+            encoding = locale.getpreferredencoding() or 'utf-8'
         return self.copy(encoding=encoding)
 
     def parse_args(self, argv):

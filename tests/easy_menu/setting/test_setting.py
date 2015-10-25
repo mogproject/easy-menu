@@ -2,22 +2,19 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import os
+import sys
 import six
-
+from mog_commons.unittest import TestCase, base_unittest
 from easy_menu.setting.setting import Setting
 from easy_menu.exceptions import ConfigError, SettingError, EncodingError
-from tests.universal import TestCase, unittest, mock
+
+if sys.version_info < (3, 3):
+    import mock
+else:
+    from unittest import mock
 
 
 class TestSetting(TestCase):
-    def _assert_system_exit(self, expected_code, f):
-        with self.assertRaises(SystemExit) as cm:
-            f()
-        if isinstance(cm.exception, int):
-            self.assertEqual(cm.exception, expected_code)
-        else:
-            self.assertEqual(cm.exception.code, expected_code)
-
     def _testfile(self, filename):
         return os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources', filename)
 
@@ -81,7 +78,7 @@ class TestSetting(TestCase):
         self.assertEqual(Setting()._is_url('ftp://example.com/foo.yml'), False)
         self.assertEqual(Setting()._is_url('/etc/foo/bar.yml'), False)
 
-    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
+    @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_parse_args(self):
         def abspath(path):
             return os.path.join(os.path.abspath(os.path.curdir), path)
@@ -126,8 +123,8 @@ class TestSetting(TestCase):
             ''
         ])
 
-        with self.withAssertOutputInject(expect_stdout, '') as (out, err):
-            self._assert_system_exit(2, lambda: Setting(stdout=out, stderr=err).parse_args(['easy-menu', 'a', 'b']))
+        with self.withAssertOutput(expect_stdout, '') as (out, err):
+            self.assertSystemExit(2, Setting(stdout=out, stderr=err).parse_args, ['easy-menu', 'a', 'b'])
 
     def test_lookup_config(self):
         self.assertEqual(Setting('foo.yml').lookup_config(), Setting('foo.yml'))
@@ -285,7 +282,7 @@ class TestSetting(TestCase):
                 expect_data
             )
 
-    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
+    @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_load_data_dynamic(self):
         with self.withAssertOutput(
                 """Executing: echo '{"Main Menu":[{"Menu 1":"echo 1"},{"Menu 2":"echo 2"}]}'\n""", '') as (out, err):
@@ -336,9 +333,9 @@ class TestSetting(TestCase):
         for filename, expect in inputs:
             path = self._testfile(os.path.join('error', filename))
             with self.withAssertOutput('Reading file: %s\n' % path, '') as (out, err):
-                with self.assertRaises(ConfigError) as cm:
-                    Setting(config_path=path, stdout=out, stderr=err, encoding='utf-8').load_config()
-                self.assertEqual(str(cm.exception) if six.PY3 else cm.exception.message, '%s: %s' % (path, expect))
+                self.assertRaisesMessage(
+                    ConfigError, '%s: %s' % (path, expect),
+                    Setting(config_path=path, stdout=out, stderr=err, encoding='utf-8').load_config)
 
     def test_load_data_error_sjis(self):
         self.maxDiff = None
@@ -362,10 +359,10 @@ class TestSetting(TestCase):
 
         for filename, expect in inputs:
             path = self._testfile(os.path.join('error', filename))
-            with self.withAssertOutput('Reading file: %s\n' % path, '') as (out, err):
-                with self.assertRaises(ConfigError) as cm:
-                    Setting(config_path=path, stdout=out, stderr=err, encoding='sjis').load_config()
-                self.assertEqual(str(cm.exception) if six.PY3 else cm.exception.message, '%s: %s' % (path, expect))
+            with self.withAssertOutput('Reading file: %s\n' % path, '', 'sjis') as (out, err):
+                self.assertRaisesMessage(
+                    ConfigError, '%s: %s' % (path, expect),
+                    Setting(config_path=path, stdout=out, stderr=err, encoding='sjis').load_config)
 
     def test_load_data_encoding_error_file(self):
         path = self._testfile('sjis_ja.yml')
@@ -456,7 +453,7 @@ class TestSetting(TestCase):
                                   {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
             )
 
-    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
+    @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_load_config_dynamic(self):
         path = os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources', 'with_dynamic.yml')
         expect = '\n'.join([

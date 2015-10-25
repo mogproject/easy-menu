@@ -49,6 +49,7 @@ Dependencies
 * pyyaml
 * six
 * jinja2 == 2.6
+* `mog-commons <https://github.com/mogproject/mog-commons-python>`_
 
 ----------
 Quickstart

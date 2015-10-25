@@ -6,9 +6,14 @@ import os
 from contextlib import contextmanager
 from easy_menu import easy_menu
 from easy_menu.util import network_util, string_util
-from tests.universal import TestCase, mock, unittest
+from mog_commons.unittest import TestCase, base_unittest
 from tests.easy_menu.logger.mock_logger import MockLogger
 from tests.fake_io import FakeInput
+
+if sys.version_info < (3, 3):
+    import mock
+else:
+    from unittest import mock
 
 
 class TestTerminal(TestCase):
@@ -22,7 +27,7 @@ class TestTerminal(TestCase):
         finally:
             sys.argv = old
 
-    @unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
+    @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     @mock.patch('easy_menu.easy_menu.SystemLogger')
     def test_main(self, mock_logger):
         self.maxDiff = None
