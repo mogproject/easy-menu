@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import sys
 import os
 from mog_commons.unittest import TestCase, base_unittest
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
+from easy_menu.entity import Menu, Command, CommandLine, Meta
 from easy_menu.exceptions import SettingError, EncodingError
 
 from tests.easy_menu.logger.mock_logger import MockLogger
@@ -12,8 +14,8 @@ from tests.fake_io import FakeInput
 
 
 class TestTerminal(TestCase):
-    def get_exec(self):
-        return CommandExecutor(logger=MockLogger())
+    def get_exec(self, encoding='utf-8', stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
+        return CommandExecutor(MockLogger(), encoding, stdin, stdout, stderr)
 
     def test_init(self):
         t = Terminal({'': []}, 'host', 'user', self.get_exec())
@@ -55,9 +57,9 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['Main Menu', 'title'], [
-            {'menu a': 'command a'},
-            {'menu b': 'command b'},
-            {'menu c': 'command c'},
+            Command('menu a', [CommandLine('command a', Meta())]),
+            Command('menu b', [CommandLine('command b', Meta())]),
+            Command('menu c', [CommandLine('command c', Meta())]),
         ], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -73,15 +75,15 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['title'], [
-            {'menu a': 'command a'},
-            {'menu b': 'command b'},
-            {'menu c': 'command c'},
-            {'menu d': 'command d'},
-            {'menu e': 'command e'},
-            {'menu f': 'command f'},
-            {'menu g': 'command g'},
-            {'menu h': 'command h'},
-            {'menu i': 'command i'},
+            Command('menu a', [CommandLine('command a', Meta())]),
+            Command('menu b', [CommandLine('command b', Meta())]),
+            Command('menu c', [CommandLine('command c', Meta())]),
+            Command('menu d', [CommandLine('command d', Meta())]),
+            Command('menu e', [CommandLine('command e', Meta())]),
+            Command('menu f', [CommandLine('command f', Meta())]),
+            Command('menu g', [CommandLine('command g', Meta())]),
+            Command('menu h', [CommandLine('command h', Meta())]),
+            Command('menu i', [CommandLine('command i', Meta())]),
         ], 0, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -105,15 +107,15 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['title'], [
-            {'menu a': 'command a'},
-            {'menu b': 'command b'},
-            {'menu c': 'command c'},
-            {'menu d': 'command d'},
-            {'menu e': 'command e'},
-            {'menu f': 'command f'},
-            {'menu g': 'command g'},
-            {'menu h': 'command h'},
-            {'menu i': 'command i'},
+            Command('menu a', [CommandLine('command a', Meta())]),
+            Command('menu b', [CommandLine('command b', Meta())]),
+            Command('menu c', [CommandLine('command c', Meta())]),
+            Command('menu d', [CommandLine('command d', Meta())]),
+            Command('menu e', [CommandLine('command e', Meta())]),
+            Command('menu f', [CommandLine('command f', Meta())]),
+            Command('menu g', [CommandLine('command g', Meta())]),
+            Command('menu h', [CommandLine('command h', Meta())]),
+            Command('menu i', [CommandLine('command i', Meta())]),
         ], 8, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -137,7 +139,7 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['title'], [
-            {'menu a': 'command a'},
+            Command('menu a', [CommandLine('command a', Meta())]),
         ], 99, 100), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -154,8 +156,11 @@ class TestTerminal(TestCase):
 
         # sub menu
         self.assertEqual(t.get_page(['Main Menu', 'title'], [
-            {'menu a': [{'menu b': 'command b'}]},
-            {'menu c': [{'menu c': 'command c'}, {'menu d': 'command d'}]},
+            Menu('menu a', [Command('menu b', [CommandLine('command b', Meta())])], Meta()),
+            Menu('menu c', [
+                Command('menu c', [CommandLine('command c', Meta())]),
+                Command('menu d', [CommandLine('command d', Meta())]),
+            ], Meta()),
         ], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -171,9 +176,15 @@ class TestTerminal(TestCase):
 
         # multiple command lines
         self.assertEqual(t.get_page(['Main Menu', 'title'], [
-            {'menu a': ['command a']},
-            {'menu b': ['command b', 'command b']},
-            {'menu c': [{'menu d': ['command d', 'command d']}]},
+            Command('menu a', [CommandLine('command a', Meta())]),
+            Command('menu b', [
+                CommandLine('command b', Meta()),
+                CommandLine('command b', Meta()),
+            ]),
+            Menu('menu c', [Command('menu d', [
+                CommandLine('command d', Meta()),
+                CommandLine('command d', Meta()),
+            ])], Meta()),
         ], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -204,9 +215,9 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['メインメニュー', 'タイトル'], [
-            {'メニュー a': 'コマンド a'},
-            {'メニュー b': 'コマンド b'},
-            {'メニュー c': 'コマンド c'},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
+            Command('メニュー b', [CommandLine('コマンド b', Meta())]),
+            Command('メニュー c', [CommandLine('コマンド c', Meta())]),
         ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -225,9 +236,9 @@ class TestTerminal(TestCase):
             'メインメニュー', 'タイトル1', 'タイトル2', 'タイトル3', 'タイトル4',
             'タイトル5', 'タイトル6', 'タイトル7', 'タイトル8',
         ], [
-            {'メニュー a': 'コマンド a'},
-            {'メニュー b': 'コマンド b'},
-            {'メニュー c': 'コマンド c'},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
+            Command('メニュー b', [CommandLine('コマンド b', Meta())]),
+            Command('メニュー c', [CommandLine('コマンド c', Meta())]),
         ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -243,15 +254,15 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['タイトル'], [
-            {'メニュー a': 'コマンド a'},
-            {'メニュー b': 'コマンド b'},
-            {'メニュー c': 'コマンド c'},
-            {'メニュー d': 'コマンド d'},
-            {'メニュー e': 'コマンド e'},
-            {'メニュー f': 'コマンド f'},
-            {'メニュー g': 'コマンド g'},
-            {'メニュー h': 'コマンド h'},
-            {'メニュー i': 'コマンド i'},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
+            Command('メニュー b', [CommandLine('コマンド b', Meta())]),
+            Command('メニュー c', [CommandLine('コマンド c', Meta())]),
+            Command('メニュー d', [CommandLine('コマンド d', Meta())]),
+            Command('メニュー e', [CommandLine('コマンド e', Meta())]),
+            Command('メニュー f', [CommandLine('コマンド f', Meta())]),
+            Command('メニュー g', [CommandLine('コマンド g', Meta())]),
+            Command('メニュー h', [CommandLine('コマンド h', Meta())]),
+            Command('メニュー i', [CommandLine('コマンド i', Meta())]),
         ], 0, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -275,15 +286,15 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['タイトル'], [
-            {'メニュー a': 'コマンド a'},
-            {'メニュー b': 'コマンド b'},
-            {'メニュー c': 'コマンド c'},
-            {'メニュー d': 'コマンド d'},
-            {'メニュー e': 'コマンド e'},
-            {'メニュー f': 'コマンド f'},
-            {'メニュー g': 'コマンド g'},
-            {'メニュー h': 'コマンド h'},
-            {'メニュー i': 'コマンド i'},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
+            Command('メニュー b', [CommandLine('コマンド b', Meta())]),
+            Command('メニュー c', [CommandLine('コマンド c', Meta())]),
+            Command('メニュー d', [CommandLine('コマンド d', Meta())]),
+            Command('メニュー e', [CommandLine('コマンド e', Meta())]),
+            Command('メニュー f', [CommandLine('コマンド f', Meta())]),
+            Command('メニュー g', [CommandLine('コマンド g', Meta())]),
+            Command('メニュー h', [CommandLine('コマンド h', Meta())]),
+            Command('メニュー i', [CommandLine('コマンド i', Meta())]),
         ], 8, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -307,7 +318,7 @@ class TestTerminal(TestCase):
         ]))
 
         self.assertEqual(t.get_page(['タイトル'], [
-            {'メニュー a': 'コマンド a'},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
         ], 99, 100), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -324,8 +335,11 @@ class TestTerminal(TestCase):
 
         # sub menu
         self.assertEqual(t.get_page(['メインメニュー', 'タイトル'], [
-            {'メニュー a': [{'メニュー b': 'コマンド b'}]},
-            {'メニュー c': [{'メニュー c': 'コマンド c'}, {'メニュー d': 'コマンド d'}]},
+            Menu('メニュー a', [Command('メニュー b', [CommandLine('コマンド b', Meta())])], Meta()),
+            Menu('メニュー c', [
+                Command('メニュー c', [CommandLine('コマンド c', Meta())]),
+                Command('メニュー d', [CommandLine('コマンド d', Meta())]),
+            ], Meta()),
         ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -341,9 +355,15 @@ class TestTerminal(TestCase):
 
         # multiple command lines
         self.assertEqual(t.get_page(['メインメニュー', 'タイトル'], [
-            {'メニュー a': ['コマンド a']},
-            {'メニュー b': ['コマンド b', 'コマンド b']},
-            {'メニュー c': [{'メニュー d': ['コマンド d', 'コマンド d']}]},
+            Command('メニュー a', [CommandLine('コマンド a', Meta())]),
+            Command('メニュー b', [
+                CommandLine('コマンド b', Meta()),
+                CommandLine('コマンド b', Meta()),
+            ]),
+            Menu('メニュー c', [Command('メニュー d', [
+                CommandLine('コマンド d', Meta()),
+                CommandLine('コマンド d', Meta()),
+            ])], Meta()),
         ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -447,31 +467,31 @@ class TestTerminal(TestCase):
     def test_loop(self):
         self.maxDiff = None
 
-        root_menu = {
-            'Main menu': [
-                {'Menu a': 'echo executing a'},
-                {'Menu b': 'echo executing b && exit 130'},
-                {'Sub Menu 1': [
-                    {'Menu 1': 'echo executing 1'},
-                    {'Menu 2': 'echo executing 2'},
-                    {'Menu 3': 'echo executing 3'},
-                    {'Menu 4': 'echo executing 4'},
-                    {'Menu 5': 'echo executing 5'},
-                    {'Menu 6': 'echo executing 6'},
-                    {'Menu 7': 'echo executing 7'},
-                    {'Menu 8': 'echo executing 8'},
-                    {'Menu 9': 'echo executing 9'},
-                    {'Menu 10': 'echo executing 10'},
-                ]},
-            ]
-        }
+        root_menu = Menu('Main menu', [
+            Command('Menu a', [CommandLine('echo executing a', Meta())]),
+            Command('Menu b', [CommandLine('echo executing b && exit 130', Meta())]),
+            Menu('Sub Menu 1', [
+                Command('Menu 1', [CommandLine('echo executing 1', Meta())]),
+                Command('Menu 2', [CommandLine('echo executing 2', Meta())]),
+                Command('Menu 3', [CommandLine('echo executing 3', Meta())]),
+                Command('Menu 4', [CommandLine('echo executing 4', Meta())]),
+                Command('Menu 5', [CommandLine('echo executing 5', Meta())]),
+                Command('Menu 6', [CommandLine('echo executing 6', Meta())]),
+                Command('Menu 7', [CommandLine('echo executing 7', Meta())]),
+                Command('Menu 8', [CommandLine('echo executing 8', Meta())]),
+                Command('Menu 9', [CommandLine('echo executing 9', Meta())]),
+                Command('Menu 10', [CommandLine('echo executing 10', Meta())]),
+            ], Meta())
+        ], Meta())
 
         _in = FakeInput(''.join(['1n', '1N', '1\n', '1yx', '2Yx', '3n', '1yx', 'p', '9yx', '0', '-0']))
 
         # We use a temporary file due to capture the output of subprocess#call.
-        with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop.txt') as out:
+        path = os.path.join('tests', 'resources', 'expect', 'terminal_test_loop.txt')
+        with self.withAssertOutputFile(path) as out:
             t = Terminal(
-                root_menu, 'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US',
+                root_menu, 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US',
                 width=80)
             t.loop()
 
@@ -490,7 +510,7 @@ class TestTerminal(TestCase):
     def test_loop_sjis(self):
         self.maxDiff = None
 
-        root_menu = {'メインメニュー': [{'メニュー 1': "echo 'あいうえお'"}]}
+        root_menu = Menu('メインメニュー', [Command('メニュー 1', [CommandLine("echo 'あいうえお'", Meta())])], Meta())
 
         _in = FakeInput(''.join(['1yx', '0']))
 
@@ -498,7 +518,8 @@ class TestTerminal(TestCase):
         path = os.path.join('tests', 'resources', 'expect', 'terminal_test_loop_sjis.txt')
         with self.withAssertOutputFile(path, expect_file_encoding='sjis', output_encoding='sjis') as out:
             t = Terminal(
-                root_menu, 'ホスト', 'ユーザ', self.get_exec(), _input=_in, _output=out, encoding='sjis', lang='ja_JP',
+                root_menu, 'ホスト', 'ユーザ', self.get_exec(encoding='sjis', stdout=out, stderr=out),
+                _input=_in, _output=out, encoding='sjis', lang='ja_JP',
                 width=80)
             t.loop()
             # out.seek(0)
@@ -513,18 +534,27 @@ class TestTerminal(TestCase):
     def test_loop_multiple_commands(self):
         self.maxDiff = None
 
-        root_menu = {'Main Menu': [
-            {'Sub Menu 1': [
-                {'Menu 1': ['echo 1', 'echo 2']},
-            ]},
-            {'Sub Menu 2': [
-                {'Sub Menu 3': [
-                    {'Menu 3': 'echo 3'},
-                    {'Menu 4': 'echo 4'}
-                ]}, {'Menu 5': 'echo 5'}
-            ]},
-            {'Menu 6': ['echo 6', 'echo 7', 'false', 'echo 8']}]
-        }
+        root_menu = Menu('Main Menu', [
+            Menu('Sub Menu 1', [
+                Command('Menu 1', [
+                    CommandLine('echo 1', Meta()),
+                    CommandLine('echo 2', Meta()),
+                ])
+            ], Meta()),
+            Menu('Sub Menu 2', [
+                Menu('Sub Menu 3', [
+                    Command('Menu 3', [CommandLine('echo 3', Meta())]),
+                    Command('Menu 4', [CommandLine('echo 4', Meta())]),
+                ], Meta()),
+                Command('Menu 5', [CommandLine('echo 5', Meta())])
+            ], Meta()),
+            Command('Menu 6', [
+                CommandLine('echo 6', Meta()),
+                CommandLine('echo 7', Meta()),
+                CommandLine('false', Meta()),
+                CommandLine('echo 8', Meta()),
+            ])
+        ], Meta())
 
         _in = FakeInput(''.join(['1', '.1yx', '0', '21.1yx', '0.0', '3yx', '0']))
 
@@ -532,7 +562,8 @@ class TestTerminal(TestCase):
         with self.withAssertOutputFile('tests/resources/expect/terminal_test_loop_multiple_commands.txt') as out:
             t = Terminal(
                 root_menu,
-                'host', 'user', self.get_exec(), _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
+                'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
             t.loop()
 
         self.assertEqual(t.executor.logger.buffer, [

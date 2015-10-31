@@ -1,12 +1,11 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import sys
-import six
 
-from mog_commons.collection import get_single_item, get_single_key, get_single_value
 from mog_commons.string import *
 from mog_commons.io import print_safe
 from easy_menu.util import term_util
+from easy_menu.entity import Menu, Command
 from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
 
@@ -103,13 +102,7 @@ class Terminal(object):
         ]
 
     def _get_description(self, item):
-        d, c = get_single_item(item)
-
-        # TODO: refactor
-        def f(content):
-            return isinstance(content, list) and not all(isinstance(child, six.string_types) for child in content)
-
-        return self.i18n.MSG_SUB_MENU % d if f(c) else d
+        return (self.i18n.MSG_SUB_MENU if isinstance(item, Menu) else '%s') % item.title
 
     def get_page(self, titles, page_items, offset, num_pages):
         """Make menu page string."""
@@ -202,17 +195,14 @@ class Terminal(object):
             elif ch.isdigit():
                 index = offset * self.page_size + int(ch) - 1
                 if index < num_items:
-                    d = menu_items[index]
-                    description, command = get_single_item(d)
+                    item = menu_items[index]
 
                     # check if it is a sub menu
-                    if isinstance(command, list):
-                        # check if it is a command list
-                        if not all(isinstance(child, six.string_types) for child in command):
-                            return lambda s, o: (s + [d], 0)
+                    if isinstance(item, Menu):
+                        return lambda s, o: (s + [item], 0)
 
                     def f(s, o):  # side effect only
-                        self.execute_command(description, command)
+                        self.execute_command(item)
                         return s, o
 
                     return f
@@ -221,17 +211,17 @@ class Terminal(object):
             elif ch == 'p' and 0 < offset:
                 return lambda s, o: (s, o - 1)
 
-    def execute_command(self, description, command):
+    def execute_command(self, command):
         """
         Confirm with prompt before executing command.
 
-        :param description: description string
-        :param command: command line string or list of command line string
+        :param command: Command:
         :return: None
         """
+        assert isinstance(command, Command)
 
         # confirmation
-        self._draw(self.get_confirm(description))
+        self._draw(self.get_confirm(command.title))
 
         while True:
             ch = self.wait_input_char().lower()
@@ -241,23 +231,11 @@ class Terminal(object):
                 return
 
         # run command
-        self._draw(self.get_before_execute(description))
-
-        # if command is string, convert to a list
-        if isinstance(command, six.string_types):
-            command = [command]
-
-        return_code = 0
-        for cmd in command:
-            return_code = self.executor.execute(
-                cmd, stdin=self._input, stdout=self._output, stderr=self._output, encoding=self.encoding)
-
-            if return_code == 130:
-                # maybe interrupted
-                self._print('\n')
-            # if a command fails, the successors will not run
-            if return_code != 0:
-                break
+        self._draw(self.get_before_execute(command.title))
+        return_code = self.executor.execute(command)
+        if return_code == 130:
+            # maybe interrupted
+            self._print('\n')
 
         self._print(self.get_after_execute(return_code))
         self.wait_input_char()  # wait for any input
@@ -267,8 +245,8 @@ class Terminal(object):
         offset = 0  # current page index
 
         while stack:
-            titles = [get_single_key(d) for d in stack]
-            items = get_single_value(stack[-1])
+            titles = [menu.title for menu in stack]
+            items = stack[-1].items
             num_pages = self._num_pages(len(items))
 
             # apply offset
@@ -276,7 +254,7 @@ class Terminal(object):
 
             self._draw(self.get_page(titles, page_items, offset, num_pages))
 
-            f = self.wait_input_menu(get_single_value(stack[-1]), offset, num_pages)
+            f = self.wait_input_menu(items, offset, num_pages)
             stack, offset = f(stack, offset)
 
         term_util.clear_screen(self._input, self._output)
