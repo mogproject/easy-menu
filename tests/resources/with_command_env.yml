@@ -1,0 +1,22 @@
+Main Menu:
+  - menu 1:
+    - echo $ENV1 $ENV2 $ENV3:
+        env:
+          ENV1: VAL9
+          ENV3: VAL3
+    - echo $ENV1 $ENV2
+  - Sub Menu:
+    - menu 2: echo $ENV1 $ENV2 $ENV4
+    - menu 3:
+      - echo $ENV1 $ENV2 $ENV3 $ENV4:
+          env:
+            ENV3: VAL7
+    meta:
+      env:
+        ENV2: VAL8
+        ENV4: VAL4
+meta:
+  env:
+    ENV1: VAL1
+    ENV2: VAL2
+
