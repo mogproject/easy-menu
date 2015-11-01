@@ -11,5 +11,5 @@ class TestItem(TestCase):
     def test_parse_error(self):
         self.assertRaisesMessage(
             AssertionError, "Item must be dict, not %s." % ('unicode' if six.PY2 else 'str'),
-            Item.parse, {'a': ['b', {}]}, Meta(), Loader('.')
+            Item.parse, {'a': ['b', {}]}, Meta(), Loader('.', '.')
         )

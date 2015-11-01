@@ -30,6 +30,10 @@ def __get_parser():
         help='set working directory to DIR'
     )
 
+    p.add_option(
+        '--clear-cache', dest='clear_cache', action='store_true', default=False,
+        help='clear old cache when evaluating "eval" section (default: False)'
+    )
     return p
 
 

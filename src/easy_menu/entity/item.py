@@ -60,6 +60,13 @@ class Item(CaseClass):
         if KEYWORD_META in data:
             return Menu.parse(data, meta, loader, encoding, depth)
 
+        # parse eval cache setting
+        eval_expire = None
+        if KEYWORD_EVAL in data:
+            if 'cache' in data:
+                eval_expire = data['cache']
+                del data['cache']
+
         assert len(data) == 1, 'Item should have only one element, not %s.' % len(data)
 
         title, content = get_single_item(data)
@@ -71,7 +78,7 @@ class Item(CaseClass):
         elif title == KEYWORD_EVAL:
             assert isinstance(content, six.string_types), \
                 '"eval" section must have string content, not %s.' % type(content).__name__
-            return Menu.parse(loader.load(True, content), meta, loader, encoding, depth)
+            return Menu.parse(loader.load(True, content, eval_expire), meta, loader, encoding, depth)
         elif Item._is_command_like(content):
             return Command.parse(data, meta, encoding)
         else:

@@ -97,6 +97,10 @@ class TestSetting(TestCase):
             Setting().parse_args(['easy-menu', '/path/to/minimum.yml', '--encode', 'utf-8']),
             Setting(config_path='/path/to/minimum.yml', work_dir='/path/to', encoding='utf-8')
         )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'xyz.yml', '--clear-cache']),
+            Setting(config_path=abspath('xyz.yml'), clear_cache=True)
+        )
 
     def test_parse_args_error(self):
         expect_stdout = '\n'.join([
@@ -110,6 +114,8 @@ class TestSetting(TestCase):
             '  --width=WIDTH         set window width to WIDTH',
             '  -d DIR, --work-dir=DIR',
             '                        set working directory to DIR',
+            '  --clear-cache         clear old cache when evaluating "eval" section',
+            '                        (default: False)',
             ''
         ])
 
@@ -183,6 +189,67 @@ class TestSetting(TestCase):
                     ], meta)
                 ], meta)
             )
+
+    @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
+    def test_load_config_dynamic_cache(self):
+        self.maxDiff = None
+
+        meta = Meta(to_unicode(os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources')))
+        path = os.path.join(os.path.abspath(os.path.curdir), 'tests', 'resources', 'with_dynamic_cache.yml')
+
+        cache_dir = os.path.join(os.path.curdir, 'tests', 'work')
+        cache_path = os.path.join(cache_dir, '57', '8f2d1550c1fad02f46409db2b538c9')
+
+        def clear_files():
+            if os.path.exists(cache_path):
+                os.remove(cache_path)
+            if os.path.exists(os.path.dirname(cache_path)):
+                os.removedirs(os.path.dirname(cache_path))
+            if os.path.exists(cache_dir):
+                os.removedirs(cache_dir)
+
+        expect = '\n'.join([
+            'Reading file: %s' % path,
+            """Executing: echo '{"Sub Menu": [{"Menu 2": "echo 2"}, {"Menu 3": "echo 3"}]}'""",
+            'Writing eval cache: %s' % cache_path,
+            'Reading file: %s' % path,
+            'Reading eval cache: %s' % cache_path,
+            ''
+        ])
+
+        clear_files()
+
+        try:
+            with self.withAssertOutput(expect, '') as (out, err):
+                self.assertEqual(
+                    Setting(
+                        config_path=self._testfile('with_dynamic_cache.yml'), encoding='utf-8', stdout=out, stderr=err,
+                        cache_dir=cache_dir
+                    ).load_config().root_menu,
+                    Menu('Main Menu', [
+                        Command('Menu 1', [CommandLine('echo 1', meta)]),
+                        Menu('Sub Menu', [
+                            Command('Menu 2', [CommandLine('echo 2', meta)]),
+                            Command('Menu 3', [CommandLine('echo 3', meta)]),
+                        ], meta)
+                    ], meta)
+                )
+                # read twice to use cache
+                self.assertEqual(
+                    Setting(
+                        config_path=self._testfile('with_dynamic_cache.yml'), encoding='utf-8', stdout=out, stderr=err,
+                        cache_dir=cache_dir
+                    ).load_config().root_menu,
+                    Menu('Main Menu', [
+                        Command('Menu 1', [CommandLine('echo 1', meta)]),
+                        Menu('Sub Menu', [
+                            Command('Menu 2', [CommandLine('echo 2', meta)]),
+                            Command('Menu 3', [CommandLine('echo 3', meta)]),
+                        ], meta)
+                    ], meta)
+                )
+        finally:
+            clear_files()
 
     def test_load_config_error_not_found(self):
         self.assertRaisesMessage(

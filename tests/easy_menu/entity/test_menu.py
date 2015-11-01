@@ -46,5 +46,5 @@ class TestMenu(TestCase):
             Command('label 9', [CommandLine('command 9', root_meta)]),
         ], root_meta)
 
-        loader = Loader('/tmp')
+        loader = Loader('/tmp', '.')
         self.assertEqual(Menu.parse(data, Meta('/tmp'), loader), expect)
