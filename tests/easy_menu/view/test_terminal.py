@@ -41,6 +41,27 @@ class TestTerminal(TestCase):
                 lambda: t._print('\n'.join(t._get_header('Header')))
             )
 
+    def test_get_breadcrumb(self):
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        self.assertEqual(t._get_breadcrumb(['a' * 50, 'b' * 50]),
+                         '~aaaaaaaaaaaaaaaaaaaaaa > bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+        self.assertEqual(t._get_breadcrumb(['a' * 75]),
+                         'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        self.assertEqual(t._get_breadcrumb(['a' * 76]),
+                         '~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        self.assertEqual(t._get_breadcrumb([''] * 26),
+                         ' >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  > ')
+        self.assertEqual(t._get_breadcrumb([''] * 27),
+                         '~ >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  >  > ')
+        self.assertEqual(t._get_breadcrumb(['a' + 'あ' * 37]),
+                         'aあああああああああああああああああああああああああああああああああああああ')
+        self.assertEqual(t._get_breadcrumb(['あ' * 38]),
+                         '~あああああああああああああああああああああああああああああああああああああ')
+        self.assertEqual(t._get_breadcrumb(['a' + 'あ' * 38]),
+                         '~あああああああああああああああああああああああああああああああああああああ')
+        self.assertEqual(t._get_breadcrumb(['あ' * 38 + 'a']),
+                         '~あああああああああああああああああああああああああああああああああああああa')
+
     def test_get_page(self):
         self.maxDiff = None
 
@@ -242,7 +263,7 @@ class TestTerminal(TestCase):
         ], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
-            '  ル2 > タイトル3 > タイトル4 > タイトル5 > タイトル6 > タイトル7 > タイトル8',
+            '  ~ル2 > タイトル3 > タイトル4 > タイトル5 > タイトル6 > タイトル7 > タイトル8',
             '--------------------------------------------------------------------------------',
             '  [1] | メニュー a',
             '  [2] | メニュー b',

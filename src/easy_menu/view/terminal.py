@@ -104,12 +104,18 @@ class Terminal(object):
     def _get_description(self, item):
         return (self.i18n.MSG_SUB_MENU if isinstance(item, Menu) else '%s') % item.title
 
+    def _get_breadcrumb(self, titles):
+        s = ' > '.join(titles)
+        n = unicode_width(s)
+        limit = self.width - 5
+        return ('~' if limit < n else '') + unicode_right(s, limit)
+
     def get_page(self, titles, page_items, offset, num_pages):
         """Make menu page string."""
 
         assert len(page_items) <= self.page_size, 'Number of page items must less or equal than page size.'
 
-        title = unicode_right(' > '.join(titles), self.width - 4)
+        title = self._get_breadcrumb(titles)
 
         pager_lines = [] if num_pages <= 1 else [
             self.pager_line(offset, num_pages),
