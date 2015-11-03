@@ -2,13 +2,25 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import signal
+import os
+import socket
+import getpass
 from mog_commons.terminal import TerminalHandler
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.setting.setting import Setting
 from easy_menu.logger import SystemLogger
-from easy_menu.util import network_util
 from easy_menu.exceptions import EasyMenuError
+
+
+def get_hostname():
+    hostname = socket.gethostname()
+    nickname = os.environ.get('NICKNAME')
+    return hostname + (' (%s)' % nickname if nickname else '')
+
+
+def get_username():
+    return getpass.getuser()
 
 
 def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean=True):
@@ -28,8 +40,8 @@ def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean
 
         t = Terminal(
             setting.root_menu,
-            network_util.get_hostname(),
-            network_util.get_username(),
+            get_hostname(),
+            get_username(),
             executor,
             handler=handler,
             _input=setting.stdin,

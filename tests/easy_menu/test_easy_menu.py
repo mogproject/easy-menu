@@ -3,9 +3,10 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import os
+import socket
+import getpass
 from contextlib import contextmanager
 from easy_menu import easy_menu
-from easy_menu.util import network_util
 from mog_commons.string import *
 from mog_commons.unittest import TestCase, base_unittest, FakeInput
 from tests.easy_menu.logger.mock_logger import MockLogger
@@ -37,8 +38,8 @@ class TestTerminal(TestCase):
         _in = FakeInput(''.join(['1yx', '2yx', '31yx0', '41yx00', '.0']))
 
         with self.with_argv(['easy-menu', 'tests/resources/integration_1.yml', '--lang', 'us']):
-            host = network_util.get_hostname()
-            user = network_util.get_username()
+            host = socket.gethostname()
+            user = getpass.getuser()
 
             with self.withAssertOutputFile('tests/resources/expect/integration_test.txt.j2', {
                 'base_dir': os.path.abspath(os.path.curdir),
