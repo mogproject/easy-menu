@@ -56,14 +56,10 @@ class Setting(CaseClass):
                     return os.path.dirname(config_path)
         return work_dir
 
-    def resolve_encoding(self):
-        encoding = self.encoding
-        if not encoding:
-            if hasattr(self.stdout, 'encoding'):
-                encoding = self.stdout.encoding
-        if not encoding:
-            encoding = locale.getpreferredencoding() or 'utf-8'
-        return self.copy(encoding=encoding)
+    def resolve_encoding(self, terminal_handler):
+        if not self.encoding:
+            return self.copy(encoding=terminal_handler.encoding)
+        return self
 
     def parse_args(self, argv):
         option, args = arg_parser.parser.parse_args(argv[1:])

@@ -22,7 +22,7 @@ setup(
         'pyyaml',
         'six',
         'jinja2 == 2.6',  # specify library version to support Python 3.2
-        'mog-commons >= 0.1.14',
+        'mog-commons >= 0.1.17',
     ],
     tests_require=[
         'unittest2',

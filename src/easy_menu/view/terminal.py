@@ -4,7 +4,6 @@ import sys
 
 from mog_commons.string import *
 from mog_commons.io import print_safe
-from easy_menu.util import term_util
 from easy_menu.entity import Menu, Command
 from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
@@ -14,13 +13,14 @@ DEFAULT_PAGE_SIZE = 9
 
 
 class Terminal(object):
-    def __init__(self, root_menu, host, user, executor, width=None, page_size=None, _input=sys.stdin,
+    def __init__(self, root_menu, host, user, executor, handler, width=None, page_size=None, _input=sys.stdin,
                  _output=sys.stdout, encoding=None, lang=None):
         """
         :param root_menu: dict of root menu
         :param host: host name string
         :param user: user name string
         :param executor: Executor instance
+        :param handler: mog_common.terminal.TerminalHandler instance
         :param width:
         :param page_size:
         :param _input:
@@ -34,6 +34,7 @@ class Terminal(object):
         self.host = host
         self.user = user
         self.executor = executor
+        self.handler = handler
         self.width = DEFAULT_WINDOW_WIDTH if width is None else width
         self.page_size = DEFAULT_PAGE_SIZE if page_size is None else page_size
         self._input = _input
@@ -162,7 +163,7 @@ class Terminal(object):
     # Wait for input
     #
     def wait_input_char(self):
-        ch = term_util.getch(self._input)
+        ch = self.handler.getch()
         if ch in ['\x03', '\x04']:
             # pressed C-c or C-d
             raise KeyboardInterrupt
@@ -180,7 +181,7 @@ class Terminal(object):
             raise EncodingError('Failed to print menu: lang=%s, encoding=%s' % (self.lang, self.encoding))
 
     def _draw(self, unicode_text):
-        term_util.clear_screen(self._input, self._output)
+        self.handler.clear()
         self._print(unicode_text)
 
     #
@@ -263,4 +264,4 @@ class Terminal(object):
             f = self.wait_input_menu(items, offset, num_pages)
             stack, offset = f(stack, offset)
 
-        term_util.clear_screen(self._input, self._output)
+        self.handler.clear()

@@ -3,36 +3,38 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import os
-from mog_commons.unittest import TestCase, base_unittest
+from mog_commons.unittest import TestCase, base_unittest, FakeInput
+from mog_commons.terminal import TerminalHandler
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.entity import Menu, Command, CommandLine, Meta
 from easy_menu.exceptions import SettingError, EncodingError
 
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput
 
 
 class TestTerminal(TestCase):
+    handler = TerminalHandler(keep_input_clean=False)
+
     def get_exec(self, encoding='utf-8', stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
         return CommandExecutor(MockLogger(), encoding, stdin, stdout, stderr)
 
     def test_init(self):
-        t = Terminal({'': []}, 'host', 'user', self.get_exec())
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler)
         self.assertEqual(t.root_menu, {'': []})
         self.assertEqual(t.host, 'host')
         self.assertEqual(t.user, 'user')
 
     def test_init_error(self):
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 0))
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), 39))
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), -1))
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=0))
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=-1))
-        self.assertRaises(SettingError, lambda: Terminal({'': []}, 'host', 'user', self.get_exec(), page_size=10))
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, 0)
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, 39)
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, -1)
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, page_size=0)
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, page_size=-1)
+        self.assertRaises(SettingError, Terminal, {'': []}, 'host', 'user', self.get_exec(), self.handler, page_size=10)
 
     def test_print_error(self):
-        t = Terminal({'': []}, 'hose', 'user', self.get_exec(), encoding='ascii', lang='ja')
+        t = Terminal({'': []}, 'hose', 'user', self.get_exec(), handler=self.handler, encoding='ascii', lang='ja')
 
         with self.withAssertOutput('', '') as (out, err):
             self.assertRaisesRegexp(
@@ -42,7 +44,8 @@ class TestTerminal(TestCase):
             )
 
     def test_get_breadcrumb(self):
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
+                     width=80)
         self.assertEqual(t._get_breadcrumb(['a' * 50, 'b' * 50]),
                          '~aaaaaaaaaaaaaaaaaaaaaa > bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
         self.assertEqual(t._get_breadcrumb(['a' * 75]),
@@ -65,7 +68,8 @@ class TestTerminal(TestCase):
     def test_get_page(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
+                     width=80)
         self.assertEqual(t.get_page(['title'], [], 0, 1), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -223,7 +227,8 @@ class TestTerminal(TestCase):
     def test_get_page_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
+                     width=80)
         self.assertEqual(t.get_page(['タイトル'], [], 0, 1), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -402,7 +407,8 @@ class TestTerminal(TestCase):
     def test_get_confirm(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
+                     width=80)
         self.assertEqual(t.get_confirm('description'), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -416,7 +422,8 @@ class TestTerminal(TestCase):
     def test_get_confirm_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
+                     width=80)
         self.assertEqual(t.get_confirm('メニュー 1'), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -430,7 +437,8 @@ class TestTerminal(TestCase):
     def test_get_before_execute(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
+                     width=80)
         self.assertEqual(t.get_before_execute('description'), '\n'.join([
             'Host: host                                                            User: user',
             '================================================================================',
@@ -442,7 +450,8 @@ class TestTerminal(TestCase):
     def test_get_before_execute_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
+                     width=80)
         self.assertEqual(t.get_before_execute('メニュー 1'), '\n'.join([
             'ホスト名: ホスト                                              実行ユーザ: ユーザ',
             '================================================================================',
@@ -454,7 +463,8 @@ class TestTerminal(TestCase):
     def test_get_before_after(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), encoding='utf-8', lang='C', width=80)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
+                     width=80)
         self.assertEqual(t.get_after_execute(123), '\n'.join([
             '--------------------------------------------------------------------------------',
             'Return code: 123',
@@ -465,7 +475,8 @@ class TestTerminal(TestCase):
     def test_get_before_after_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), encoding='utf-8', lang='ja_JP', width=80)
+        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
+                     width=80)
         self.assertEqual(t.get_after_execute(123), '\n'.join([
             '--------------------------------------------------------------------------------',
             'Return code: 123',
@@ -476,7 +487,8 @@ class TestTerminal(TestCase):
     @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_wait_input_char(self):
         _in = FakeInput('xyz\x03\n\x04')
-        t = Terminal({'': []}, 'host', 'user', self.get_exec(), _input=_in)
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(),
+                     handler=TerminalHandler(stdin=_in, keep_input_clean=False), _input=_in)
         self.assertEqual(t.wait_input_char(), 'x')
         self.assertEqual(t.wait_input_char(), 'y')
         self.assertEqual(t.wait_input_char(), 'z')
@@ -512,8 +524,8 @@ class TestTerminal(TestCase):
         with self.withAssertOutputFile(path) as out:
             t = Terminal(
                 root_menu, 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
-                _input=_in, _output=out, encoding='utf-8', lang='en_US',
-                width=80)
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
             t.loop()
 
         self.assertEqual(t.executor.logger.buffer, [
@@ -540,6 +552,7 @@ class TestTerminal(TestCase):
         with self.withAssertOutputFile(path, expect_file_encoding='sjis', output_encoding='sjis') as out:
             t = Terminal(
                 root_menu, 'ホスト', 'ユーザ', self.get_exec(encoding='sjis', stdout=out, stderr=out),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
                 _input=_in, _output=out, encoding='sjis', lang='ja_JP',
                 width=80)
             t.loop()
@@ -584,6 +597,7 @@ class TestTerminal(TestCase):
             t = Terminal(
                 root_menu,
                 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
                 _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
             t.loop()
 

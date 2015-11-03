@@ -2,34 +2,48 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import signal
+import os
+import socket
+import getpass
+from mog_commons.terminal import TerminalHandler
 from easy_menu.view import Terminal
 from easy_menu.controller import CommandExecutor
 from easy_menu.setting.setting import Setting
 from easy_menu.logger import SystemLogger
-from easy_menu.util import network_util, term_util
 from easy_menu.exceptions import EasyMenuError
 
 
-def main(stdin=None, stdout=None, stderr=None):
+def get_hostname():
+    hostname = socket.gethostname()
+    nickname = os.environ.get('NICKNAME')
+    return hostname + (' (%s)' % nickname if nickname else '')
+
+
+def get_username():
+    return getpass.getuser()
+
+
+def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean=True):
     """
     Main function
     """
 
     # for terminal restoration
-    restore_term_func = term_util.restore_term_func(sys.stdin)
-    signal.signal(signal.SIGTERM, restore_term_func)
+    handler = TerminalHandler(stdin=stdin, stdout=stdout, stderr=stderr, keep_input_clean=keep_input_clean)
+    signal.signal(signal.SIGTERM, handler.restore_terminal)
 
     base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr)
 
     try:
-        setting = base_setting.parse_args(sys.argv).resolve_encoding().lookup_config().load_config()
+        setting = base_setting.parse_args(sys.argv).resolve_encoding(handler).lookup_config().load_config()
         executor = CommandExecutor(SystemLogger(setting.encoding), setting.encoding, stdin, stdout, stderr)
 
         t = Terminal(
             setting.root_menu,
-            network_util.get_hostname(),
-            network_util.get_username(),
+            get_hostname(),
+            get_username(),
             executor,
+            handler=handler,
             _input=setting.stdin,
             _output=setting.stdout,
             encoding=setting.encoding,
@@ -38,7 +52,7 @@ def main(stdin=None, stdout=None, stderr=None):
         )
 
         t.loop()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         pass
     except EasyMenuError as e:
         base_setting.stdout.write('%s: %s\n' % (e.__class__.__name__, e))
@@ -53,5 +67,5 @@ def main(stdin=None, stdout=None, stderr=None):
         return 4
     finally:
         # assume to restore original terminal settings
-        restore_term_func(None, None)
+        handler.restore_terminal(None, None)
     return 0
