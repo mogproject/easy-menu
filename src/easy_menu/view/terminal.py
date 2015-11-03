@@ -218,6 +218,10 @@ class Terminal(object):
             elif ch == 'p' and 0 < offset:
                 return lambda s, o: (s, o - 1)
 
+            # if getch is disabled, redraw screen
+            if not self.handler.getch_enabled:
+                return lambda s, o: (s, o)
+
     def execute_command(self, command):
         """
         Confirm with prompt before executing command.
@@ -234,7 +238,7 @@ class Terminal(object):
             ch = self.wait_input_char().lower()
             if ch == 'y':
                 break
-            if ch == 'n' or ch == '\r':
+            if ch == 'n' or ch == '\r' or not self.handler.getch_enabled:
                 return
 
         # run command

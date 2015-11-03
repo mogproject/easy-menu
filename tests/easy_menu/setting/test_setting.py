@@ -94,8 +94,13 @@ class TestSetting(TestCase):
             Setting().parse_args(['easy-menu', 'xyz.yml', '--clear-cache']),
             Setting(config_path=abspath('xyz.yml'), clear_cache=True)
         )
+        self.assertEqual(
+            Setting().parse_args(['easy-menu', 'xyz.yml', '--no-getch']),
+            Setting(config_path=abspath('xyz.yml'), getch_enabled=False)
+        )
 
     def test_parse_args_error(self):
+        self.maxDiff = None
         expect_stdout = '\n'.join([
             'Usage: setup.py [options...] [<config_path> | <config_url>]',
             '',
@@ -109,7 +114,9 @@ class TestSetting(TestCase):
             '                        set working directory to DIR',
             '  --clear-cache         clear old cache when evaluating "eval" section',
             '                        (default: False)',
-            ''
+            '  --no-getch            disable real-time key input (without pressing ENTER',
+            '                        key) (default: enabled)',
+            '',
         ])
 
         with self.withAssertOutput(expect_stdout, '') as (out, err):

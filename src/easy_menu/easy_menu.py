@@ -28,14 +28,15 @@ def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean
     Main function
     """
 
+    base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr).parse_args(sys.argv)
+
     # for terminal restoration
-    handler = TerminalHandler(stdin=stdin, stdout=stdout, stderr=stderr, keep_input_clean=keep_input_clean)
+    handler = TerminalHandler(stdin=stdin, stdout=stdout, stderr=stderr,
+                              keep_input_clean=keep_input_clean, getch_enabled=base_setting.getch_enabled)
     signal.signal(signal.SIGTERM, handler.restore_terminal)
 
-    base_setting = Setting(stdin=stdin, stdout=stdout, stderr=stderr)
-
     try:
-        setting = base_setting.parse_args(sys.argv).resolve_encoding(handler).lookup_config().load_config()
+        setting = base_setting.resolve_encoding(handler).lookup_config().load_config()
         executor = CommandExecutor(SystemLogger(setting.encoding), setting.encoding, stdin, stdout, stderr)
 
         t = Terminal(
