@@ -34,6 +34,11 @@ def __get_parser():
         '--clear-cache', dest='clear_cache', action='store_true', default=False,
         help='clear old cache when evaluating "eval" section (default: False)'
     )
+
+    p.add_option(
+        '--no-getch', dest='getch_enabled', action='store_false', default=True,
+        help='disable real-time key input (without pressing ENTER key) (default: enabled)'
+    )
     return p
 
 

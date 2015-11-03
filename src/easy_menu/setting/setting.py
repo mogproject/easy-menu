@@ -22,7 +22,7 @@ class Setting(CaseClass):
     """
 
     def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, width=None,
-                 clear_cache=False, cache_dir=EVAL_CACHE_DIR, stdin=None, stdout=None, stderr=None):
+                 clear_cache=False, cache_dir=EVAL_CACHE_DIR, stdin=None, stdout=None, stderr=None, getch_enabled=True):
         is_url = Loader.is_url(config_path)
         work_dir = omap(lambda s: to_unicode(s, encoding), self._search_work_dir(work_dir, config_path, is_url))
 
@@ -37,7 +37,9 @@ class Setting(CaseClass):
                            ('cache_dir', cache_dir),
                            ('stdin', oget(stdin, sys.stdin)),
                            ('stdout', oget(stdout, sys.stdout)),
-                           ('stderr', oget(stderr, sys.stderr)))
+                           ('stderr', oget(stderr, sys.stderr)),
+                           ('getch_enabled', getch_enabled),
+                           )
 
     @staticmethod
     def _find_lang(lang):
@@ -76,7 +78,7 @@ class Setting(CaseClass):
             arg_parser.parser.exit(2)
 
         return self.copy(config_path=path, work_dir=option.work_dir, encoding=option.encoding, lang=option.lang,
-                         width=option.width, clear_cache=option.clear_cache)
+                         width=option.width, clear_cache=option.clear_cache, getch_enabled=option.getch_enabled)
 
     def lookup_config(self):
         if self.config_path is None:
