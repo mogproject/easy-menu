@@ -2,7 +2,6 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import os
-import six
 from mog_commons.unittest import TestCase, base_unittest
 from mog_commons.string import to_unicode
 from easy_menu.setting.setting import Setting
@@ -41,17 +40,11 @@ class TestSetting(TestCase):
         self.assertEqual(s5.root_menu, {})
 
     def test_resolve_encoding(self):
-        import io
-        import codecs
+        from mog_commons.terminal import TerminalHandler
 
-        if six.PY2:
-            out = codecs.getwriter('sjis')
-            out.encoding = 'sjis'
-        else:
-            out = io.TextIOWrapper(six.StringIO(), 'sjis')
-
-        self.assertEqual(Setting(stdout=out).resolve_encoding().encoding, 'sjis')
-        self.assertEqual(Setting(encoding='utf-8', stdout=out).resolve_encoding().encoding, 'utf-8')
+        handler = TerminalHandler(encoding='sjis')
+        self.assertEqual(Setting().resolve_encoding(handler).encoding, 'sjis')
+        self.assertEqual(Setting(encoding='utf-8').resolve_encoding(handler).encoding, 'utf-8')
 
     def test_find_lang(self):
         s = Setting()

@@ -7,9 +7,8 @@ from contextlib import contextmanager
 from easy_menu import easy_menu
 from easy_menu.util import network_util
 from mog_commons.string import *
-from mog_commons.unittest import TestCase, base_unittest
+from mog_commons.unittest import TestCase, base_unittest, FakeInput
 from tests.easy_menu.logger.mock_logger import MockLogger
-from tests.fake_io import FakeInput
 
 if sys.version_info < (3, 3):
     import mock
@@ -45,7 +44,7 @@ class TestTerminal(TestCase):
                 'base_dir': os.path.abspath(os.path.curdir),
                 'header': edge_just('Host: ' + host, 'User: ' + user, 78)
             }) as out:
-                self.assertEqual(easy_menu.main(_in, out), 0)
+                self.assertEqual(easy_menu.main(_in, out, out, False), 0)
 
             self.assertEqual(ml.buffer, [
                 (6, '[INFO] Command started: exit 1'),
