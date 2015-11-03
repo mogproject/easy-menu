@@ -52,7 +52,7 @@ def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean
         )
 
         t.loop()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         pass
     except EasyMenuError as e:
         base_setting.stdout.write('%s: %s\n' % (e.__class__.__name__, e))
