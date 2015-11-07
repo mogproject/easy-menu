@@ -23,7 +23,7 @@ def get_username():
     return getpass.getuser()
 
 
-def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean=True):
+def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean=True, timing=True):
     """
     Main function
     """
@@ -49,7 +49,8 @@ def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean
             _output=setting.stdout,
             encoding=setting.encoding,
             lang=setting.lang,
-            width=setting.width
+            width=setting.width,
+            timing=timing
         )
 
         t.loop()
