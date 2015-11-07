@@ -1,9 +1,12 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 import six
 from mog_commons.case_class import CaseClass
 from mog_commons.collection import get_single_item
+from mog_commons.types import *
+from easy_menu.entity.meta import Meta
+from easy_menu.setting.loader import Loader
 
 
 @six.add_metaclass(ABCMeta)
@@ -37,6 +40,7 @@ class Item(CaseClass):
         return False
 
     @staticmethod
+    @types(data=dict, meta=Meta, loader=Loader)
     def parse(data, meta, loader, encoding='utf-8', depth=0):
         """
         :param data:
@@ -46,12 +50,7 @@ class Item(CaseClass):
         :param depth: indicator for the nesting level
         :return:
         """
-        from easy_menu.entity import Menu, Meta, Command, KEYWORD_META, KEYWORD_INCLUDE, KEYWORD_EVAL
-        from easy_menu.setting.loader import Loader
-
-        assert isinstance(data, dict), 'Item must be dict, not %s.' % type(data).__name__
-        assert isinstance(meta, Meta)
-        assert isinstance(loader, Loader)
+        from easy_menu.entity import Menu, Command, KEYWORD_META, KEYWORD_INCLUDE, KEYWORD_EVAL
 
         # avoid for inclusion loops and stack overflow
         assert depth < 50, 'Nesting level too deep.'
@@ -80,6 +79,10 @@ class Item(CaseClass):
                 '"eval" section must have string content, not %s.' % type(content).__name__
             return Menu.parse(loader.load(True, content, eval_expire), meta, loader, encoding, depth)
         elif Item._is_command_like(content):
-            return Command.parse(data, meta, encoding)
+            return Command.parse(data, meta, loader, encoding, depth)
         else:
             return Menu.parse(data, meta, loader, encoding, depth)
+
+    @abstractmethod
+    def formatted(self):
+        """abstract method"""

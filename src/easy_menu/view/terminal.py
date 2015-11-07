@@ -16,7 +16,7 @@ DEFAULT_PAGE_SIZE = 9
 
 class Terminal(object):
     def __init__(self, root_menu, host, user, executor, handler, width=None, page_size=None, _input=sys.stdin,
-                 _output=sys.stdout, encoding=None, lang=None, timing=True):
+                 _output=sys.stdout, encoding=None, lang=None, timing=True, source_enabled=True):
         """
         :param root_menu: dict of root menu
         :param host: host name string
@@ -30,6 +30,7 @@ class Terminal(object):
         :param encoding:
         :param lang: language setting
         :param timing: bool: print running time after executing command if true
+        :param source_enabled: bool: allow source printing if true
         :return:
         """
         # fields
@@ -46,6 +47,7 @@ class Terminal(object):
         self.lang = lang
         self.i18n = self._find_i18n(lang)
         self.timing = timing
+        self.source_enabled = source_enabled
 
         if self.width < 40:
             raise SettingError('width must be equal or greater than 40: width=%s' % self.width)
@@ -248,6 +250,11 @@ class Terminal(object):
                 return lambda s, o: (s, o + 1)
             elif ch == 'p' and 0 < offset:
                 return lambda s, o: (s, o - 1)
+            elif ch == 's' and self.source_enabled:
+                def f(s, o):  # side effect only
+                    self.print_source()
+                    return s, o
+                return f
 
             # if getch is disabled, redraw screen
             if not self.handler.getch_enabled:
@@ -282,6 +289,13 @@ class Terminal(object):
 
         self._print(self.get_after_execute(command.title, return_code, start_time, end_time))
         self.wait_input_char()  # wait for any input
+
+    def print_source(self):
+        """Print source of the root menu."""
+        self._draw('\n'.join(self._get_header(self.i18n.MSG_SOURCE_TITLE)))
+        self._print('\n%s\n' % self.root_menu.formatted())
+        self._print('\n'.join(self._get_footer(self.i18n.MSG_INPUT_ANY)))
+        self.wait_input_char()
 
     def loop(self):
         stack = [self.root_menu]

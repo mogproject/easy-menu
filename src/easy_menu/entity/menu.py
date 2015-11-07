@@ -1,17 +1,18 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import six
-from mog_commons.case_class import CaseClass
-from mog_commons.string import to_unicode, is_unicode
+from mog_commons.string import to_unicode
 from mog_commons.collection import get_single_item
-from easy_menu.entity import Command, Meta
+from mog_commons.types import *
+from easy_menu.entity import Meta, Item
 
 
-class Menu(CaseClass):
+class Menu(Item):
     """
     Menu is built from an one-element dict having title string as key and item list element as value
     """
 
+    @types(title=Unicode, items=ListOf(Item), meta=Meta)
     def __init__(self, title, items, meta):
         """
         :param title:
@@ -19,19 +20,12 @@ class Menu(CaseClass):
         :param meta:
         :return:
         """
-        assert is_unicode(title)
-        assert isinstance(items, list) and all(isinstance(x, Menu) or isinstance(x, Command) for x in items)
-        assert isinstance(meta, Meta)
-
-        CaseClass.__init__(self,
-                           ('title', title),
-                           ('items', items),
-                           ('meta', meta))
+        Item.__init__(self, ('title', title), ('items', items), ('meta', meta))
 
     @staticmethod
+    @types(Item, data=dict, meta=Meta)
     def parse(data, meta, loader, encoding='utf-8', depth=0):
         """
-
         :param data:
         :param meta:
         :param loader:
@@ -40,9 +34,6 @@ class Menu(CaseClass):
         :return:
         """
         from easy_menu.entity import KEYWORD_META, Item
-
-        assert isinstance(data, dict), 'Menu must be dict, not %s.' % type(data).__name__
-        assert isinstance(meta, Meta)
 
         # read meta configurations
         if KEYWORD_META in data:
@@ -58,3 +49,9 @@ class Menu(CaseClass):
 
         items = [Item.parse(item, meta, loader, encoding, depth + 1) for item in content]
         return Menu(title, items, meta)
+
+    @types(Unicode)
+    def formatted(self):
+        """Return formatted string for pretty printing."""
+        return '\n'.join(
+            ['# %s:' % self.title] + ['  %s' % line for x in self.items for line in x.formatted().splitlines()])

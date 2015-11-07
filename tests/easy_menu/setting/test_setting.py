@@ -284,8 +284,8 @@ class TestSetting(TestCase):
             ('error_key_only2.yml', 'Menu content must be list, not NoneType.'),
             ('error_meta_only.yml', 'Menu should have only one item, not 0.'),
             ('error_multiple_items.yml', 'Menu should have only one item, not 2.'),
-            ('error_not_dict1.yml', 'Menu must be dict, not list.'),
-            ('error_not_dict2.yml', 'Item must be dict, not int.'),
+            ('error_not_dict1.yml', 'data must be dict, not list.'),
+            ('error_not_dict2.yml', 'data must be dict, not int.'),
         ]
 
         for filename, expect in inputs:
