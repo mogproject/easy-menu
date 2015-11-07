@@ -523,6 +523,28 @@ class TestTerminal(TestCase):
         self.assertEqual(t.wait_input_char(), '\n')
         self.assertRaises(KeyboardInterrupt, t.wait_input_char)
 
+    def test_wait_input_menu(self):
+        self.maxDiff = None
+
+        _in = FakeInput('a\n9\n0\n')
+
+        expected = '\n'.join([
+            'Host: host                                                            User: user',
+            '================================================================================',
+            '  ',
+            '--------------------------------------------------------------------------------',
+            '------+-------------------------------------------------------------------------',
+            '  [0] | Quit',
+            '================================================================================',
+            'Press menu number (0-0): ',
+        ]) * 3
+        with self.withAssertOutput(expected, '') as (out, err):
+            t = Terminal(
+                Menu('', [], Meta()), 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=err),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=err, keep_input_clean=False, getch_enabled=False),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
+            t.loop()
+
     def test_print_source(self):
         self.maxDiff = None
 
