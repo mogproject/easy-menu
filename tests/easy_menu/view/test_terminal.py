@@ -523,6 +523,80 @@ class TestTerminal(TestCase):
         self.assertEqual(t.wait_input_char(), '\n')
         self.assertRaises(KeyboardInterrupt, t.wait_input_char)
 
+    def test_wait_input_menu(self):
+        self.maxDiff = None
+
+        _in = FakeInput('a\n9\n0\n')
+
+        expected = '\n'.join([
+            'Host: host                                                            User: user',
+            '================================================================================',
+            '  ',
+            '--------------------------------------------------------------------------------',
+            '------+-------------------------------------------------------------------------',
+            '  [0] | Quit',
+            '================================================================================',
+            'Press menu number (0-0): ',
+        ]) * 3
+        with self.withAssertOutput(expected, '') as (out, err):
+            t = Terminal(
+                Menu('', [], Meta()), 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=err),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=err, keep_input_clean=False, getch_enabled=False),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
+            t.loop()
+
+    def test_print_source(self):
+        self.maxDiff = None
+
+        root_meta = Meta('/path/to/work', {'ENV1': 'VAL1', 'ENV2': 'VAL2'})
+        sub_meta = Meta('/tmp2', {'ENV1': 'VAL1', 'ENV2': 'VAL2'})
+        special_meta = Meta('/path/to/work2', {'ENV1': 'VAL9', 'ENV2': 'VAL2', 'ENV3': 'VAL3'})
+
+        root_menu = Menu('Main menu', [
+            Command('label 1', [CommandLine('command 1', root_meta)]),
+            Command('label 2', [CommandLine('command 2', root_meta)]),
+            Command('label 3', [CommandLine('command 3', special_meta), CommandLine('command 4', root_meta)]),
+            Menu('sub menu', [
+                Command('label s1', [CommandLine('command 5', sub_meta)])
+            ], sub_meta),
+            Command('label 9', [CommandLine('command 9', root_meta)]),
+        ], root_meta)
+
+        _in = FakeInput('s\nx\n0\n')
+        path = os.path.join('tests', 'resources', 'expect', 'terminal_test_print_source.txt')
+        with self.withAssertOutputFile(path, {'': ''}) as out:
+            t = Terminal(
+                root_menu, 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False, getch_enabled=False),
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
+            t.loop()
+
+    def test_print_source_ja(self):
+        self.maxDiff = None
+
+        root_meta = Meta('/path/to/work', {'ENV1': '値1', 'ENV2': '値2'})
+        sub_meta = Meta('/tmp2', {'ENV1': '値1', 'ENV2': '値2'})
+        special_meta = Meta('/path/to/work2', {'ENV1': '値9', 'ENV2': '値2', 'ENV3': '値3'})
+
+        root_menu = Menu('メイン メニュー', [
+            Command('メニュー 1', [CommandLine('コマンド 1', root_meta)]),
+            Command('メニュー 2', [CommandLine('コマンド 2', root_meta)]),
+            Command('メニュー 3', [CommandLine('コマンド 3', special_meta), CommandLine('command 4', root_meta)]),
+            Menu('サブ メニュー', [
+                Command('メニュー s1', [CommandLine('コマンド 5', sub_meta)])
+            ], sub_meta),
+            Command('メニュー 9', [CommandLine('コマンド 9', root_meta)]),
+        ], root_meta)
+
+        _in = FakeInput('s\nx\n0\n')
+        path = os.path.join('tests', 'resources', 'expect', 'terminal_test_print_source_ja.txt')
+        with self.withAssertOutputFile(path, {'': ''}) as out:
+            t = Terminal(
+                root_menu, 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
+                handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False, getch_enabled=False),
+                _input=_in, _output=out, encoding='utf-8', lang='ja_JP', width=80, timing=False)
+            t.loop()
+
     @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_loop(self):
         self.maxDiff = None

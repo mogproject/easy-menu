@@ -1,8 +1,8 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
-import six
 from mog_commons.case_class import CaseClass
 from mog_commons.collection import get_single_item
+from mog_commons.types import *
 from mog_commons.string import to_unicode, is_unicode, is_strlike
 from easy_menu.entity import Meta
 
@@ -42,3 +42,11 @@ class CommandLine(CaseClass):
             return CommandLine(to_unicode(cmd, encoding), new_meta)
         else:
             raise ValueError('CommandLine must be string or dict, not %s.' % type(data).__name__)
+
+    @types(Unicode)
+    def formatted(self):
+        return '\n'.join([
+            '- cmd: %s' % self.cmd,
+            '  cwd: %s' % self.meta.work_dir,
+            '  env: {%s}' % ', '.join('%s: %s' % (k, v) for k, v in sorted(self.meta.env.items())),
+        ])
