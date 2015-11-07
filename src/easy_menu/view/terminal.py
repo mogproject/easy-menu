@@ -1,9 +1,11 @@
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import sys
+from datetime import datetime
 
 from mog_commons.string import *
 from mog_commons.io import print_safe
+from mog_commons.types import *
 from easy_menu.entity import Menu, Command
 from easy_menu.exceptions import EncodingError, SettingError
 from easy_menu.view import i18n
@@ -14,7 +16,7 @@ DEFAULT_PAGE_SIZE = 9
 
 class Terminal(object):
     def __init__(self, root_menu, host, user, executor, handler, width=None, page_size=None, _input=sys.stdin,
-                 _output=sys.stdout, encoding=None, lang=None):
+                 _output=sys.stdout, encoding=None, lang=None, timing=True):
         """
         :param root_menu: dict of root menu
         :param host: host name string
@@ -27,6 +29,7 @@ class Terminal(object):
         :param _output:
         :param encoding:
         :param lang: language setting
+        :param timing: bool: print running time after executing command if true
         :return:
         """
         # fields
@@ -42,6 +45,7 @@ class Terminal(object):
         self.encoding = encoding
         self.lang = lang
         self.i18n = self._find_i18n(lang)
+        self.timing = timing
 
         if self.width < 40:
             raise SettingError('width must be equal or greater than 40: width=%s' % self.width)
@@ -152,12 +156,39 @@ class Terminal(object):
     def get_before_execute(self, description):
         return '\n'.join(self._get_header(self.i18n.MSG_RUN_TITLE % description) + [''])
 
-    def get_after_execute(self, return_code):
-        result_lines = [
-            self.thin_line(),
-            'Return code: %d' % return_code,
-        ]
+    def get_after_execute(self, title, return_code, start_time, end_time):
+        items = [('Return code', '%d' % return_code)]
+        if self.timing:
+            items = [
+                (self.i18n.MSG_FINISH, title),
+                ('Running time', '%s  (%s -> %s)' % (self._format_timedelta(end_time - start_time),
+                                                     self._format_datetime(start_time),
+                                                     self._format_datetime(end_time))),
+            ] + items
+        key_width = max(unicode_width(x[0]) for x in items)
+        result_lines = [self.thin_line()] + ['%s: %s' % (unicode_ljust(k, key_width), v) for k, v in items]
         return '\n'.join(result_lines + self._get_footer(self.i18n.MSG_INPUT_ANY))
+
+    @staticmethod
+    def _format_timedelta(tm):
+        hour, second = divmod(tm.seconds, 60 * 60)
+        minute, second = divmod(second, 60)
+
+        if tm.days < 0:
+            return ''
+        elif tm.days > 0:
+            return '%dd %dh %dm %ds' % (tm.days, hour, minute, second)
+        elif hour > 0:
+            return '%dh %dm %ds' % (hour, minute, second)
+        elif minute > 0:
+            return '%dm %ds' % (minute, second)
+        elif second > 0:
+            return '%ds' % second
+        return '%dms' % (tm.microseconds // 1000)
+
+    @staticmethod
+    def _format_datetime(dt):
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
 
     #
     # Wait for input
@@ -222,6 +253,7 @@ class Terminal(object):
             if not self.handler.getch_enabled:
                 return lambda s, o: (s, o)
 
+    @types(command=Command)
     def execute_command(self, command):
         """
         Confirm with prompt before executing command.
@@ -229,8 +261,6 @@ class Terminal(object):
         :param command: Command:
         :return: None
         """
-        assert isinstance(command, Command)
-
         # confirmation
         self._draw(self.get_confirm(command.title))
 
@@ -242,13 +272,15 @@ class Terminal(object):
                 return
 
         # run command
+        start_time = datetime.now()
         self._draw(self.get_before_execute(command.title))
         return_code = self.executor.execute(command)
+        end_time = datetime.now()
         if return_code == 130:
             # maybe interrupted
             self._print('\n')
 
-        self._print(self.get_after_execute(return_code))
+        self._print(self.get_after_execute(command.title, return_code, start_time, end_time))
         self.wait_input_char()  # wait for any input
 
     def loop(self):

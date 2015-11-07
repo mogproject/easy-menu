@@ -3,6 +3,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import sys
 import os
+from datetime import datetime, timedelta
 from mog_commons.unittest import TestCase, base_unittest, FakeInput
 from mog_commons.terminal import TerminalHandler
 from easy_menu.view import Terminal
@@ -460,29 +461,55 @@ class TestTerminal(TestCase):
             ''
         ]))
 
-    def test_get_before_after(self):
+    def test_get_after_execute(self):
         self.maxDiff = None
 
         t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='C',
                      width=80)
-        self.assertEqual(t.get_after_execute(123), '\n'.join([
+        self.assertEqual(t.get_after_execute(
+            'description', 123, datetime(2015, 12, 3, 4, 56, 7, 890000), datetime(2015, 12, 4, 5, 6, 7, 890000)
+        ), '\n'.join([
             '--------------------------------------------------------------------------------',
-            'Return code: 123',
+            'Finished    : description',
+            'Running time: 1d 0h 10m 0s  (2015-12-03 04:56:07 -> 2015-12-04 05:06:07)',
+            'Return code : 123',
             '================================================================================',
             'Press any key to continue...'
         ]))
 
-    def test_get_before_after_ja(self):
+    def test_get_after_execute_ja(self):
         self.maxDiff = None
 
-        t = Terminal({'': []}, 'ホスト', 'ユーザ', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
+        t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler, encoding='utf-8', lang='ja_JP',
                      width=80)
-        self.assertEqual(t.get_after_execute(123), '\n'.join([
+        self.assertEqual(t.get_after_execute(
+            'メニュー 1', 123, datetime(2015, 12, 3, 4, 56, 7, 890000), datetime(2015, 12, 4, 5, 6, 7, 890000)
+        ), '\n'.join([
             '--------------------------------------------------------------------------------',
-            'Return code: 123',
+            '実行完了    : メニュー 1',
+            'Running time: 1d 0h 10m 0s  (2015-12-03 04:56:07 -> 2015-12-04 05:06:07)',
+            'Return code : 123',
             '================================================================================',
             '何かキーを押すとメニューに戻ります...'
         ]))
+
+    def test_format_timedelta(self):
+        self.assertEqual(Terminal._format_timedelta(timedelta(-1, 1)), '')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 0)), '0ms')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 0, 1)), '0ms')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 0, 999)), '0ms')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 0, 1000)), '1ms')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 0, 999999)), '999ms')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 1, 999)), '1s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 60, 999)), '1m 0s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 3600, 999)), '1h 0m 0s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 3601, 999)), '1h 0m 1s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(0, 86399, 999)), '23h 59m 59s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(1, 0, 0)), '1d 0h 0m 0s')
+        self.assertEqual(Terminal._format_timedelta(timedelta(50, 50000, 0)), '50d 13h 53m 20s')
+
+    def test_format_datetime(self):
+        self.assertEqual(Terminal._format_datetime(datetime(2015, 12, 3, 4, 56, 7, 890000)), '2015-12-03 04:56:07')
 
     @base_unittest.skipUnless(os.name != 'nt', 'requires POSIX compatible')
     def test_wait_input_char(self):
@@ -525,7 +552,7 @@ class TestTerminal(TestCase):
             t = Terminal(
                 root_menu, 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
                 handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
-                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
             t.loop()
 
         self.assertEqual(t.executor.logger.buffer, [
@@ -553,8 +580,7 @@ class TestTerminal(TestCase):
             t = Terminal(
                 root_menu, 'ホスト', 'ユーザ', self.get_exec(encoding='sjis', stdout=out, stderr=out),
                 handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
-                _input=_in, _output=out, encoding='sjis', lang='ja_JP',
-                width=80)
+                _input=_in, _output=out, encoding='sjis', lang='ja_JP', width=80, timing=False)
             t.loop()
             # out.seek(0)
             # print(out.read())
@@ -598,7 +624,7 @@ class TestTerminal(TestCase):
                 root_menu,
                 'host', 'user', self.get_exec(encoding='utf-8', stdout=out, stderr=out),
                 handler=TerminalHandler(stdin=_in, stdout=out, stderr=out, keep_input_clean=False),
-                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80)
+                _input=_in, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
             t.loop()
 
         self.assertEqual(t.executor.logger.buffer, [

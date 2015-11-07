@@ -45,7 +45,7 @@ class TestTerminal(TestCase):
                 'base_dir': os.path.abspath(os.path.curdir),
                 'header': edge_just('Host: ' + host, 'User: ' + user, 78)
             }) as out:
-                self.assertEqual(easy_menu.main(_in, out, out, False), 0)
+                self.assertEqual(easy_menu.main(_in, out, out, False, False), 0)
 
             self.assertEqual(ml.buffer, [
                 (6, '[INFO] Command started: exit 1'),
