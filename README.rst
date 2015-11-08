@@ -48,7 +48,7 @@ Dependencies
 * Python: 2.6 / 2.7 / 3.2 / 3.3 / 3.4 / 3.5
 * pyyaml
 * six
-* jinja2 == 2.6
+* jinja2 (version==2.6 if Python 3.2)
 * `mog-commons <https://github.com/mogproject/mog-commons-python>`_
 
 ----------
