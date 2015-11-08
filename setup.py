@@ -1,11 +1,10 @@
+import sys
 from setuptools import setup, find_packages
 
 SRC_DIR = 'src'
 
 
 def get_version():
-    import sys
-
     sys.path[:0] = [SRC_DIR]
     return __import__('easy_menu').__version__
 
@@ -21,13 +20,12 @@ setup(
     install_requires=[
         'pyyaml',
         'six',
-        'jinja2 == 2.6',  # specify library version to support Python 3.2
-        'mog-commons >= 0.1.21',
+        'jinja2' + (' == 2.6' if sys.version_info[:2] == (3, 2) else ''),
+        'mog-commons >= 0.2.0',
     ],
     tests_require=[
-        'unittest2',
         'mock == 1.0.1',  # lock version to older version of setuptools
-    ],
+    ] + (['unittest2'] if sys.version_info < (2, 7) else []),
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),
     include_package_data=True,
