@@ -52,7 +52,7 @@ class TestLoader(TestCase):
         with self.withAssertOutput('Reading file: %s\n' % self._testfile('with_meta.yml'), '') as (out, err):
             self.assertEqual(
                 Loader('.', '.', stdout=out).load(False, self._testfile('with_meta.yml')),
-                {'meta': {'work_dir': '/tmp'},
+                {'meta': {'work_dir': '/tmp', 'lock': True},
                  'Main Menu': [{'Menu 1': 'echo 1'}, {'Menu 2': 'echo 2'}, {'Menu 3': 'echo 3'}, {'Menu 4': 'echo 4'},
                                {'Menu 5': 'echo 5'}, {'Menu 6': 'echo 6'}]}
             )

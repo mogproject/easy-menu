@@ -37,7 +37,9 @@ def main(stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, keep_input_clean
 
     try:
         setting = base_setting.resolve_encoding(handler).lookup_config().load_config()
-        executor = CommandExecutor(SystemLogger(setting.encoding), setting.encoding, stdin, stdout, stderr)
+        executor = CommandExecutor(
+            SystemLogger(setting.encoding), setting.encoding, stdin, stdout, stderr, setting.pid_dir
+        )
 
         t = Terminal(
             setting.root_menu,

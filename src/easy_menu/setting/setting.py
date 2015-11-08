@@ -14,6 +14,7 @@ from easy_menu.exceptions import SettingError, ConfigError
 
 DEFAULT_CONFIG_NAME = os.environ.get('EASY_MENU_CONFIG', 'easy-menu.yml')
 EVAL_CACHE_DIR = os.path.join(os.path.expanduser('~'), '.easy-menu', 'eval')
+COMMAND_PID_DIR = os.path.join(os.path.expanduser('~'), '.easy-menu', 'pid')
 
 
 class Setting(CaseClass):
@@ -22,8 +23,8 @@ class Setting(CaseClass):
     """
 
     def __init__(self, config_path=None, work_dir=None, root_menu=None, encoding=None, lang=None, width=None,
-                 clear_cache=False, cache_dir=EVAL_CACHE_DIR, stdin=None, stdout=None, stderr=None, getch_enabled=True,
-                 source_enabled=True):
+                 clear_cache=False, cache_dir=EVAL_CACHE_DIR, pid_dir=COMMAND_PID_DIR,
+                 stdin=None, stdout=None, stderr=None, getch_enabled=True, source_enabled=True):
         is_url = Loader.is_url(config_path)
         work_dir = omap(lambda s: to_unicode(s, encoding), self._search_work_dir(work_dir, config_path, is_url))
 
@@ -36,6 +37,7 @@ class Setting(CaseClass):
                            ('width', width),
                            ('clear_cache', clear_cache),
                            ('cache_dir', cache_dir),
+                           ('pid_dir', pid_dir),
                            ('stdin', oget(stdin, sys.stdin)),
                            ('stdout', oget(stdout, sys.stdout)),
                            ('stderr', oget(stderr, sys.stderr)),

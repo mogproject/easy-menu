@@ -1,0 +1,22 @@
+---
+Main Menu:
+  - Lock 1:
+    - sleep 5:
+        lock: yes
+  - Lock 2:
+    - sleep 4
+    - sleep 4:
+        lock: yes
+    - sleep 4:
+        lock: yes
+  - Sub Menu:
+    - Lock 3: sleep 5
+    - Lock 4:
+      - sleep 5:
+          env:
+            ENV1: VAL1
+    - Lock 5:
+      - sleep 5:
+          lock: False
+    meta:
+      lock: True

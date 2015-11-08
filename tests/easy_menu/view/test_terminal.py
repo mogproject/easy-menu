@@ -12,13 +12,14 @@ from easy_menu.entity import Menu, Command, CommandLine, Meta
 from easy_menu.exceptions import SettingError, EncodingError
 
 from tests.easy_menu.logger.mock_logger import MockLogger
+from tests.easy_menu.controller.mock_executor import MockExecutor
 
 
 class TestTerminal(TestCase):
     handler = TerminalHandler(keep_input_clean=False)
 
-    def get_exec(self, encoding='utf-8', stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
-        return CommandExecutor(MockLogger(), encoding, stdin, stdout, stderr)
+    def get_exec(self, encoding='utf-8', stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, pid_dir='/tmp'):
+        return CommandExecutor(MockLogger(), encoding, stdin, stdout, stderr, pid_dir)
 
     def test_init(self):
         t = Terminal({'': []}, 'host', 'user', self.get_exec(), handler=self.handler)
@@ -715,3 +716,58 @@ class TestTerminal(TestCase):
             (6, '[INFO] Command started: false'),
             (6, '[INFO] Command ended with return code: 1'),
         ])
+
+    def test_execute_command_duplicate(self):
+        self.maxDiff = None
+        sleep_cmd = 'python -c "import time;time.sleep(1)"' if os.name == 'nt' else 'sleep 1'
+        _in1 = FakeInput('\n'.join(['y', '\r']))
+        _in2 = FakeInput('\n'.join(['y', '\r']))
+
+        root_menu = Menu('Main Menu', [Command('Menu 1', [CommandLine(sleep_cmd, Meta(lock=True))])])
+        expected_en = '\n'.join([
+            'Host: host                                                            User: user',
+            '================================================================================',
+            '  Confirmation',
+            '--------------------------------------------------------------------------------',
+            '  Would execute: Menu 1',
+            '================================================================================',
+            'Do you really want to execute? (y/n) [n]: '
+            'Host: host                                                            User: user',
+            '================================================================================',
+            '  Duplicate check',
+            '--------------------------------------------------------------------------------',
+            '  Already running: Menu 1',
+            '================================================================================',
+            'Do you really want to continue? (y/n) [n]: ',
+        ])
+
+        with self.withAssertOutput(expected_en, '') as (out, err):
+            t = Terminal(
+                root_menu, 'host', 'user', MockExecutor(0, True),
+                TerminalHandler(stdin=_in1, stdout=out, stderr=err, keep_input_clean=False, getch_enabled=False),
+                _input=_in1, _output=out, encoding='utf-8', lang='en_US', width=80, timing=False)
+            t.execute_command(Command('Menu 1', [CommandLine(sleep_cmd, Meta(lock=True))]))
+
+        expected_ja = '\n'.join([
+            'ホスト名: host                                                  実行ユーザ: user',
+            '================================================================================',
+            '  実行確認',
+            '--------------------------------------------------------------------------------',
+            '  Menu 1 を行います。',
+            '================================================================================',
+            'よろしいですか? (y/n) [n]: '
+            'ホスト名: host                                                  実行ユーザ: user',
+            '================================================================================',
+            '  多重実行チェック',
+            '--------------------------------------------------------------------------------',
+            '  Menu 1 は既に実行中です。',
+            '================================================================================',
+            '本当によろしいですか? (y/n) [n]: ',
+        ])
+
+        with self.withAssertOutput(expected_ja, '') as (out, err):
+            t = Terminal(
+                root_menu, 'host', 'user', MockExecutor(0, True),
+                TerminalHandler(stdin=_in2, stdout=out, stderr=err, keep_input_clean=False, getch_enabled=False),
+                _input=_in2, _output=out, encoding='utf-8', lang='ja_JP', width=80, timing=False)
+            t.execute_command(Command('Menu 1', [CommandLine(sleep_cmd, Meta(lock=True))]))

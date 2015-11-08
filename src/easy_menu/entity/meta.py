@@ -11,15 +11,16 @@ class Meta(CaseClass):
     Meta settings for running commands
     """
 
-    @types(work_dir=Option(Unicode), env=Option(DictOf(Unicode, Unicode)))
-    def __init__(self, work_dir=None, env=None):
+    @types(work_dir=Option(Unicode), env=Option(DictOf(Unicode, Unicode)), lock=bool)
+    def __init__(self, work_dir=None, env=None, lock=False):
         """
         :param work_dir:
         :param env:
+        :param lock:
         :return:
         """
         env = env or {}
-        CaseClass.__init__(self, ('work_dir', work_dir), ('env', env))
+        CaseClass.__init__(self, ('work_dir', work_dir), ('env', env), ('lock', lock))
 
     @types(data=dict)
     def updated(self, data, encoding):
@@ -30,7 +31,8 @@ class Meta(CaseClass):
         """
         functions = {
             'work_dir': Meta._load_work_dir,
-            'env': Meta._load_env
+            'env': Meta._load_env,
+            'lock': Meta._load_lock,
         }
 
         ret = self.copy()
@@ -50,6 +52,12 @@ class Meta(CaseClass):
         d = copy.copy(self.env)
         d.update([(to_unicode(k, encoding), to_unicode(v, encoding)) for k, v in data.items()])
         self.env = d
+        return self
+
+    @types(data=bool, encoding=String)
+    def _load_lock(self, data, encoding):
+        """Overwrite lock setting"""
+        self.lock = data
         return self
 
     @staticmethod

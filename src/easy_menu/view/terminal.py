@@ -155,6 +155,19 @@ class Terminal(object):
             self._get_header(self.i18n.MSG_CONFIRM_TITLE) + item_lines +
             self._get_footer(self.i18n.MSG_CONFIRM_QUESTION))
 
+    def get_duplicate(self, description):
+        """
+        Make duplicate check page string
+        """
+
+        item_lines = [
+            self.i18n.MSG_DUPLICATE % description
+        ]
+        return '\n'.join(
+            self._get_header(self.i18n.MSG_DUPLICATE_TITLE) + item_lines +
+            self._get_footer(self.i18n.MSG_DUPLICATE_QUESTION)
+        )
+
     def get_before_execute(self, description):
         return '\n'.join(self._get_header(self.i18n.MSG_RUN_TITLE % description) + [''])
 
@@ -201,6 +214,17 @@ class Terminal(object):
             # pressed C-c or C-d
             raise KeyboardInterrupt
         return ch
+
+    def wait_input_yes_no(self, default=False):
+        while True:
+            ch = self.wait_input_char().lower()
+            if ch == 'y':
+                return True
+            elif ch == 'n':
+                return False
+            elif ch == '\r' or not self.handler.getch_enabled:
+                # default
+                return default
 
     #
     # Output
@@ -270,12 +294,13 @@ class Terminal(object):
         """
         # confirmation
         self._draw(self.get_confirm(command.title))
+        if not self.wait_input_yes_no():
+            return
 
-        while True:
-            ch = self.wait_input_char().lower()
-            if ch == 'y':
-                break
-            if ch == 'n' or ch == '\r' or not self.handler.getch_enabled:
+        # duplicate check
+        if self.executor.is_running(command):
+            self._draw(self.get_duplicate(command.title))
+            if not self.wait_input_yes_no():
                 return
 
         # run command

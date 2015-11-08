@@ -1,6 +1,7 @@
 ---
 meta:
   work_dir: /tmp
+  lock: yes
 
 Main Menu:
   - Menu 1: echo 1

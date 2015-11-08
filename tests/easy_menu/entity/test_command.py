@@ -14,11 +14,11 @@ class TestCommand(TestCase):
         self.assertEqual(Command.parse(
             {'label 2': [
                 {'cmd 2': {'env': {'xxx': '123', 'yyy': '234'}, 'work_dir': '/work'}},
-                {'cmd 3': {'env': {'xxx': '123', 'zzz': '345'}, 'work_dir': '/work2'}},
+                {'cmd 3': {'env': {'xxx': '123', 'zzz': '345'}, 'work_dir': '/work2', 'lock': True}},
             ]}, Meta(), loader
         ), Command('label 2', [
             CommandLine('cmd 2', Meta('/work', {'xxx': '123', 'yyy': '234'})),
-            CommandLine('cmd 3', Meta('/work2', {'xxx': '123', 'zzz': '345'})),
+            CommandLine('cmd 3', Meta('/work2', {'xxx': '123', 'zzz': '345'}, True)),
         ]))
 
     def test_parse_error(self):
