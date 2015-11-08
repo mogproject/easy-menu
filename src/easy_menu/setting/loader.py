@@ -129,5 +129,5 @@ class Loader(object):
         return data
 
     def _eval_cache_path(self, cmdline):
-        h = hashlib.md5(to_bytes(cmdline, 'utf-8')).hexdigest()
+        h = hashlib.md5(to_bytes(cmdline, self.encoding)).hexdigest()
         return os.path.join(self.cache_dir, h[:2], h[2:])

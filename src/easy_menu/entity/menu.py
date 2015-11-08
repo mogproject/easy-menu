@@ -13,7 +13,7 @@ class Menu(Item):
     """
 
     @types(title=Unicode, items=ListOf(Item), meta=Meta)
-    def __init__(self, title, items, meta):
+    def __init__(self, title, items, meta=Meta()):
         """
         :param title:
         :param items:

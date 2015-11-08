@@ -24,7 +24,7 @@ setup(
         'mog-commons >= 0.2.0',
     ],
     tests_require=[
-        'mock == 1.0.1',  # lock version to older version of setuptools
+        'mock == 1.0.1',  # lock version for older version of setuptools
     ] + (['unittest2'] if sys.version_info < (2, 7) else []),
     package_dir={'': SRC_DIR},
     packages=find_packages(SRC_DIR),
